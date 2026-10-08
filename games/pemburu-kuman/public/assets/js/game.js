@@ -26,6 +26,8 @@ function tone(f1,f2,dur,type='sine',vol=.22,delay=0){
 const sPop = () => { tone(500,1400,.12,'sine',.3); tone(1600,2400,.06,'triangle',.08,.05); };
 let lastSquish = 0;
 const sSquish = () => { const n=performance.now(); if(n-lastSquish<140) return; lastSquish=n; tone(rnd(700,1000),rnd(1300,1700),.07,'triangle',.06); };
+// "Cling cling": dua dentingan lonceng tinggi.
+const sCling = d => [[2093,0],[3136,.01],[2637,.14],[3951,.15]].forEach(([f,o],i)=>tone(f,f*1.003,i%2?.3:.45,'sine',i%2?.06:.15,d+o));
 const sWin = () => [523,659,784,1047].forEach((f,i)=>tone(f,f*1.01,.25,'triangle',.18,i*.12));
 
 /* ---------- Home hero ---------- */
@@ -333,6 +335,54 @@ function win(){
   $('#winSheet').classList.add('on');
 }
 
+/* Tombol orang tua "Sudah bersih": semua kuman kabur, gigi berkilau, lalu menang. */
+let viewRect=null;
+function teethPoints(n){
+  const pts=[], R=viewRect;
+  for(let i=0;i<n;i++){
+    let uv=null;
+    if(R && useFace() && mouth) uv=anchorUV({up:i%2===0, t:rnd(.12,.88)});
+    else if(R && cand.length>1){ const c=pick(cand); uv=[((c%W)+.5)/W, (((c/W)|0)+.5)/H]; }
+    pts.push(uv ? [R.x+uv[0]*R.w, R.y+uv[1]*R.h] : [CW*rnd(.3,.7), CH*rnd(.42,.58)]);
+  }
+  return pts;
+}
+function shine(){
+  if(!round || round.done) return;
+  const now=performance.now(), r=round;
+  audio(); round.done=true;
+  let said=false;
+  for(const g of germs) if(g.state==='alive'){
+    // cukup satu kuman yang teriak, supaya balon katanya tidak menumpuk
+    g.state='pop'; g.popT=now; g.say=pick(OUCH[mode]); g.sayUntil=said?0:now+1100; said=true;
+    if(g.sx!=null) for(let i=0;i<4;i++) bubble(g.sx,g.sy,true);
+  }
+  round.killed=round.total; updateCounter(); sPop();
+  // kilau muncul bergantian, dua gelombang, masing-masing dengan bunyi "cling"
+  const pts=teethPoints(6), R=germR();
+  let cx=0, cy=0; for(const [x,y] of pts){ cx+=x/pts.length; cy+=y/pts.length; }
+  let spread=0; for(const [x,y] of pts) spread=Math.max(spread, Math.hypot(x-cx,y-cy));
+  for(const d of [0,650]) parts.push({type:'glow',x:cx,y:cy,vx:0,vy:0,r:Math.max(R*2.2,spread*1.4),life:-d,max:900});
+  // sedikit kilau saja: tiga per gelombang, satu "cling" per gelombang
+  pts.forEach(([x,y],i) => parts.push({type:'sparkle',x,y,vx:0,vy:0,r:rnd(R*1.4,R*1.9),life:-(i%3)*140-(i>=3?650:0),max:700,rot:rnd(-.15,.15)}));
+  sCling(.05); sCling(.7);
+  setTimeout(() => { if(round===r && screen==='play') win(); }, 2400);
+}
+// Kilau cahaya putih: titik terang dengan sinar tipis, seperti pantulan cahaya di gigi.
+function sparkle(c,x,y,r,rot){
+  if(r<=0) return;
+  c.save(); c.translate(x,y); c.rotate(rot);
+  const halo=c.createRadialGradient(0,0,0,0,0,r*.6);
+  halo.addColorStop(0,'rgba(255,255,255,.95)'); halo.addColorStop(1,'rgba(255,255,255,0)');
+  c.fillStyle=halo; c.beginPath(); c.arc(0,0,r*.6,0,7); c.fill();
+  // bayangan kebiruan tipis supaya kilau putih tetap terbaca di atas gigi putih
+  c.shadowColor='rgba(60,110,170,.55)'; c.shadowBlur=r*.18; c.fillStyle='#fff';
+  const ray=(len,w)=>{ c.beginPath(); c.moveTo(0,-len); c.quadraticCurveTo(w,0,0,len); c.quadraticCurveTo(-w,0,0,-len); c.fill(); };
+  ray(r,r*.1); c.rotate(Math.PI/2); ray(r*.8,r*.1);
+  c.rotate(Math.PI/4); ray(r*.35,r*.07); c.rotate(Math.PI/2); ray(r*.35,r*.07);
+  c.restore();
+}
+
 /* Tap & rub with finger */
 let pressing=false;
 function pointerHit(e,amt){
@@ -390,6 +440,7 @@ function frame(now){
     else ctx.drawImage(s.el, rect.x, rect.y, rect.w, rect.h);
     ctx.restore();
   }
+  viewRect=rect;
   const visible = detected || now-lastSeen < 700;
 
   // scanning sweep while searching
@@ -430,6 +481,13 @@ function frame(now){
 
   for(const p of parts){
     p.life+=dt; p.x+=p.vx*dt/16; p.y+=p.vy*dt/16;
+    if(p.life<0) continue;
+    if(p.type==='glow'){
+      const k=Math.sin(Math.PI*Math.min(1,p.life/p.max)), gr=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r);
+      gr.addColorStop(0,`rgba(255,255,255,${.8*k})`); gr.addColorStop(.5,`rgba(255,246,200,${.4*k})`); gr.addColorStop(1,'rgba(255,246,200,0)');
+      ctx.fillStyle=gr; ctx.fillRect(p.x-p.r,p.y-p.r,p.r*2,p.r*2); continue;
+    }
+    if(p.type==='sparkle'){ sparkle(ctx,p.x,p.y,p.r*Math.sin(Math.PI*Math.min(1,p.life/p.max)),p.rot+p.life/900); continue; }
     if(p.type==='star'){ p.vy+=.12*dt/16; p.rot+=.08; }
     const a = 1-p.life/p.max; if(a<=0) continue;
     ctx.save(); ctx.globalAlpha=a;
@@ -444,6 +502,9 @@ function frame(now){
 
   // instructions
   showLoader(now);
+  const sheetOn = document.querySelector('#play .sheet.on');
+  const shineOff = mode!=='teeth' || !round || round.done || !!sheetOn;
+  if(shineBtn.hidden!==shineOff) shineBtn.hidden=shineOff;
   if(!round || round.done || $('#camSheet').classList.contains('on') || $('#loadSheet').classList.contains('on')) setTip('');
   else if(!s.ready) setTip('Sebentar, kamera lagi siap-siap…');
   else if(!visible && useFace() && !faceSeen) setTip('Lihat ke kamera, ya! 🙂<small>Wajahmu harus kelihatan</small>');
@@ -490,6 +551,8 @@ function goHome(){
 
 document.querySelectorAll('.choice').forEach(b => b.addEventListener('click', () => startPlay(b.dataset.mode)));
 $('#homeBtn').addEventListener('click', goHome);
+const shineBtn=$('#shineBtn');
+shineBtn.addEventListener('click', shine);
 $('#doneBtn').addEventListener('click', goHome);
 $('#againBtn').addEventListener('click', () => { $('#winSheet').classList.remove('on'); newRound(); });
 $('#retryCam').addEventListener('click', startCam);
