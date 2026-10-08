@@ -21,7 +21,7 @@ const ART = `function ART(c,x,y,r){
   c.fillStyle='{{ACCENT}}'; c.beginPath(); c.arc(x,y,r,0,7); c.fill();
   c.fillStyle='rgba(255,255,255,.35)'; c.beginPath(); c.arc(x-r*.35,y-r*.4,r*.22,0,7); c.fill();
   c.font=(r*1.15)+'px "Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif';
-  c.fillStyle='#000'; c.textAlign='center'; c.textBaseline='middle'; c.fillText('{{EMOJI}}',x,y+r*.08);
+  c.fillStyle='#000'; c.textAlign='center'; c.textBaseline='middle'; c.fillText({{EMOJI_JS}},x,y+r*.08);
 }`;
 
 const og = `<!doctype html><html><head>${fontLink}<style>

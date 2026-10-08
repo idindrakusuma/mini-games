@@ -9,6 +9,7 @@ const PER_STAR = 5;               // tiap 5 huruf selesai = 1 bintang
 const STEP = 2;                   // jarak antar titik sampel (satuan kotak 120x180)
 const TOL = 30;                   // toleransi jarak jari ke jalur (lebar, untuk balita)
 const AHEAD = 20;                 // berapa titik ke depan yang boleh "dikejar" jari (40 satuan)
+const MARGIN = 15;                // ruang di atas garis atas & di bawah ekor bawah (satuan kotak)
 const REENTRY = 6;                // masuk lagi ke jalur hanya di dekat titik hijau (12 satuan ke depan)
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -91,11 +92,12 @@ showStars();
 
 /* ---------- Jalur → titik ---------- */
 const measure = $('#measure'), NS = 'http://www.w3.org/2000/svg';
+const parseDot = d => { const [, x, y] = d.split(' ').map(Number); return { x, y }; };   // "dot X Y"
 const cache = {};
 function strokesOf(ch){
   if (cache[ch]) return cache[ch];
   return cache[ch] = STROKES[ch].map(d => {
-    if (d.startsWith('dot')) { const [, x, y] = d.split(' ').map(Number); return { dot: true, d, pts: [{ x, y }] }; }
+    if (d.startsWith('dot')) return { dot: true, d, pts: [parseDot(d)] };
     const p = document.createElementNS(NS, 'path'); p.setAttribute('d', d); measure.append(p);
     const len = p.getTotalLength(), pts = [];
     for (let t = 0; t < len; t += STEP) { const q = p.getPointAtLength(t); pts.push({ x: q.x, y: q.y }); }
@@ -109,14 +111,16 @@ function strokesOf(ch){
 let tab = 'besar';
 function glyphSvg(ch){
   const parts = STROKES[ch].map(d => d.startsWith('dot')
-    ? `<circle cx="${d.split(' ')[1]}" cy="${d.split(' ')[2]}" r="4" fill="currentColor" stroke-width="5"/>`
+    ? (({ x, y }) => `<circle cx="${x}" cy="${y}" r="4" fill="currentColor" stroke-width="5"/>`)(parseDot(d))
     : `<path d="${d}" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>`).join('');
   return `<svg viewBox="0 10 120 165" aria-hidden="true">${parts}</svg>`;
 }
+// Label untuk pembaca layar: bedakan huruf besar/kecil ("A besar", "a kecil", "angka 3").
+const labelOf = ch => /\d/.test(ch) ? `angka ${ch}` : `${ch} ${ch === ch.toUpperCase() ? 'besar' : 'kecil'}`;
 function renderGrid(){
   document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.set === tab)));
   $('#grid').innerHTML = SETS[tab].map(ch =>
-    `<button class="ch" data-ch="${ch}" aria-label="${ch}">${glyphSvg(ch)}${done[ch] ? '<span class="ok" aria-hidden="true">✓</span>' : ''}</button>`).join('');
+    `<button class="ch" data-ch="${ch}" aria-label="${labelOf(ch)}">${glyphSvg(ch)}${done[ch] ? '<span class="ok" aria-hidden="true">✓</span>' : ''}</button>`).join('');
 }
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => { tab = t.dataset.set; renderGrid(); }));
 $('#grid').addEventListener('click', e => { const b = e.target.closest('.ch'); if (b) { audio(); open(b.dataset.ch); } });
@@ -135,8 +139,10 @@ function resize(){
   const dpr = Math.min(2, devicePixelRatio || 1), W = pad.clientWidth, H = pad.clientHeight;
   const bw = Math.round(W * dpr), bh = Math.round(H * dpr);
   if (pad.width !== bw || pad.height !== bh) { pad.width = bw; pad.height = bh; }   // hindari alokasi ulang yang tidak perlu
-  const s = Math.min(W / BOX.w, H / (BOX.desc + 15 - (BOX.top - 15))) * .96;
-  view = { s, dpr, ox: (W - BOX.w * s) / 2, oy: (H - (BOX.desc + 15 - (BOX.top - 15)) * s) / 2 - (BOX.top - 15) * s };
+  // Area yang ditampilkan: dari 15 satuan di atas garis atas sampai 15 satuan di bawah ekor bawah.
+  const top = BOX.top - MARGIN, span = BOX.desc + MARGIN - top;
+  const s = Math.min(W / BOX.w, H / span) * .96;
+  view = { s, dpr, ox: (W - BOX.w * s) / 2, oy: (H - span * s) / 2 - top * s };
 }
 // Ukur ulang setiap kali ukuran papan berubah (rotasi layar, teks di atasnya berganti baris, font termuat).
 // Gambar langsung (bukan di frame berikutnya) supaya papan tidak berkedip kosong.

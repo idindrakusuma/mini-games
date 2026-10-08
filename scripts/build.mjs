@@ -11,8 +11,6 @@ const gamesDir = path.join(root, 'games');
 const dist = path.join(root, 'dist');
 const LANDING = 'landing-page';
 
-fs.rmSync(dist, { recursive: true, force: true });
-
 const games = fs.readdirSync(gamesDir, { withFileTypes: true })
   .filter(d => d.isDirectory())
   .map(d => d.name)
@@ -27,6 +25,9 @@ for (const name of games) {
     throw new Error(`Bentrok: games/${LANDING}/public/${name} menimpa game ${name}`);
   }
 }
+
+// Hapus dist/ lama hanya setelah semua pengecekan lolos.
+fs.rmSync(dist, { recursive: true, force: true });
 
 for (const name of games) {
   const src = path.join(gamesDir, name, 'public');
