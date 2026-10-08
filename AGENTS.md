@@ -1,4 +1,4 @@
-# AGENT.md
+# AGENTS.md
 
 Panduan untuk AI agent (dan manusia) yang bekerja di repo ini.
 

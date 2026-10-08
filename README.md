@@ -28,7 +28,7 @@ games/
     promo/
 scripts/build.mjs      ← menyusun games/*/public ke dist/
 vercel.json
-AGENT.md               ← aturan untuk AI agent & kontributor
+AGENTS.md               ← aturan untuk AI agent & kontributor
 .agents/skills/new-game ← skill: workflow membuat game baru
 ```
 

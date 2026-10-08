@@ -5,7 +5,7 @@ description: Membuat game baru di Taman Bermain (repo mini-games), mulai dari id
 
 # Membuat game baru di Taman Bermain
 
-Ikuti aturan di `AGENT.md`. Langkah-langkah di bawah ini dikerjakan berurutan.
+Ikuti aturan di `AGENTS.md`. Langkah-langkah di bawah ini dikerjakan berurutan.
 
 ## 1. Pahami gamenya
 
