@@ -80,8 +80,9 @@ a.card:active{ transform:translateY(5px); box-shadow:0 3px 0 var(--shadow); }
 .card.leaf{ --accent:var(--leaf); }
 .card.water{ --accent:var(--water); }
 .card.grape{ --accent:var(--grape); }
-/* Kartu "Segera hadir" (opsional): tambahkan <div class="card soon"> di index.html kalau ingin
-   menampilkan game yang belum jadi. Scaffold new-game akan menggantinya dengan kartu game baru. */
+/* Kartu "Segera hadir" (opsional): tambahkan <li><div class="card soon">…</div></li> di daftar
+   .games pada index.html kalau ingin menampilkan game yang belum jadi. Scaffold new-game akan
+   mengganti kartu "soon" pertama dengan kartu game baru. */
 .card.soon{ --accent:var(--soon); border-style:dashed; box-shadow:none; opacity:.85; }
 .card.soon .ico{ background:var(--soon); filter:grayscale(.3); animation:none; }
 .card.soon .play{ background:var(--soon); color:var(--muted); box-shadow:none; }

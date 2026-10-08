@@ -389,15 +389,20 @@ pad.addEventListener('pointerdown', e => {
   if (e.pointerType === 'touch' && (e.width * e.height > 3600 || Math.max(e.width, e.height) > 90)) return;
   // Pointer utama baru boleh mengambil alih kunci (supaya tidak macet kalau pointerup hilang),
   // tapi sentuhan tidak boleh merebut dari pena (telapak tangan saat menulis dengan stylus).
-  // Kecuali pena sudah diam > 1,5 detik (pointerup-nya mungkin hilang): jari boleh mengambil alih.
-  const penBusy = pointerType === 'pen' && e.pointerType !== 'pen' && performance.now() - lastInput < 1500;
-  if (pointer !== null && (!e.isPrimary || penBusy)) return;
+  // Pena yang masih menempel (walau diam) tetap memegang kunci; kunci pena dilepas begitu pena
+  // terdeteksi terangkat (lihat pointermove/pointerleave di bawah), bukan dengan timer.
+  if (pointer !== null && (!e.isPrimary || (pointerType === 'pen' && e.pointerType !== 'pen'))) return;
   pointerType = e.pointerType;
   pointer = e.pointerId; T.onTrack = false; T.needLift = false; wake();
   try { pad.setPointerCapture(e.pointerId); } catch (err) { /* pointer sudah tidak aktif: abaikan */ }
   follow(toBox(e));
 });
+// Pointerup pena bisa hilang. Pena yang melayang tanpa menekan (buttons === 0) atau keluar dari papan
+// berarti sudah terangkat: lepaskan kuncinya supaya jari bisa menulis lagi.
+const penLifted = e => e.pointerType === 'pen' && e.pointerId === pointer && e.buttons === 0;
+pad.addEventListener('pointerleave', e => { if (penLifted(e)) pointer = null; });
 pad.addEventListener('pointermove', e => {
+  if (penLifted(e)) { pointer = null; return; }
   if (e.pointerId !== pointer) return;
   wake();
   const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e], r = pad.getBoundingClientRect();   // ukur sekali per event

@@ -31,7 +31,11 @@ const ACCENTS = {
 };
 
 // ---------- argumen ----------
-const args = {};
+// Satu sumber untuk semua flag: true = wajib diisi. Object.create(null) supaya nama seperti
+// "__proto__" tidak bisa lolos dari pengecekan flag tidak dikenal.
+const FLAGS = { slug: true, name: true, emoji: true, tagline: true, description: true,
+                accent: false, keywords: false, 'title-suffix': false, 'short-name': false };
+const args = Object.create(null);
 for (let i = 2; i < process.argv.length; i++) {
   const a = process.argv[i];
   if (!a.startsWith('--')) continue;
@@ -47,10 +51,10 @@ for (let i = 2; i < process.argv.length; i++) {
 }
 const fail = msg => { console.error('✗ ' + msg); process.exit(1); };
 // Flag salah ketik (mis. --title_suffix) ditolak, supaya tidak diam-diam memakai nilai default.
-const KNOWN = ['slug', 'name', 'emoji', 'accent', 'tagline', 'description', 'keywords', 'title-suffix', 'short-name'];
+const KNOWN = Object.keys(FLAGS);
 for (const k of Object.keys(args)) if (!KNOWN.includes(k)) fail(`flag tidak dikenal: --${k} (yang tersedia: ${KNOWN.map(x => '--' + x).join(', ')})`);
 for (const k of Object.keys(args)) args[k] = args[k].trim();
-for (const k of ['slug', 'name', 'emoji', 'tagline', 'description']) if (!args[k]) fail(`--${k} wajib diisi`);
+for (const k of KNOWN) if (FLAGS[k] && !args[k]) fail(`--${k} wajib diisi`);
 const slug = args.slug;
 if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)) fail('--slug harus kebab-case, contoh: tebak-hewan');
 if (slug === 'landing-page' || slug === 'assets') fail(`--slug "${slug}" sudah dipakai sistem`);
@@ -73,8 +77,9 @@ const ogLines = words.reduce((lines, w) => {
   return lines;
 }, []);
 const longest = Math.max(...ogLines.map(w => w.length));
-// Tanggal lokal (WIB), bukan UTC, supaya lastmod tidak mundur sehari saat dijalankan pagi hari.
-const today = new Date().toLocaleDateString('sv');   // format YYYY-MM-DD
+// Tanggal WIB (UTC+7, tanpa DST) apa pun zona waktu mesinnya, supaya lastmod tidak mundur sehari
+// saat dijalankan pagi hari. toISOString selalu menghasilkan YYYY-MM-DD yang valid.
+const today = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10);
 // short_name PWA (label di bawah ikon) maksimal 12 huruf. Kalau nama terlalu panjang dan --short-name
 // tidak diberikan: coba tanpa spasi ("Huruf&Angka"), kalau masih kepanjangan pakai kata pertama + peringatan.
 // Potong per karakter (bukan per unit UTF-16) supaya emoji tidak terbelah.
@@ -169,7 +174,8 @@ const card = `    <li>
       </a>
     </li>
 `;
-const soon = /    <li>\n      <div class="card soon"[\s\S]*?<\/li>\n/;
+// Toleran terhadap indentasi: <li> berisi <div class="card soon"> di mana pun.
+const soon = /[ \t]*<li>\s*<div class="card soon"[\s\S]*?<\/li>[ \t]*\n?/;
 // Pakai fungsi sebagai pengganti, supaya pola "$&", "$$" dll. di nama/tagline tidak ikut diproses.
 if (soon.test(landing)) landing = landing.replace(soon, () => card);
 else if (landing.includes('  </ul>')) landing = landing.replace('  </ul>', () => card + '  </ul>');
