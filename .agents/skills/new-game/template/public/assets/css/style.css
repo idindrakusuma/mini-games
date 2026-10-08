@@ -48,7 +48,7 @@ h1{
 }
 .hud > *{ pointer-events:auto; }
 .round{
-  width:56px; height:56px; border-radius:50%; border:0; background:var(--card); color:var(--text);
+  width:64px; height:64px;   /* target sentuh minimal 64px (lihat SKILL.md) */ border-radius:50%; border:0; background:var(--card); color:var(--text);
   font-size:1.7rem; box-shadow:0 4px 0 rgba(0,0,0,.2); display:grid; place-items:center;
 }
 .round.spacer{ visibility:hidden; }   /* penyeimbang HUD supaya penghitung tetap di tengah */

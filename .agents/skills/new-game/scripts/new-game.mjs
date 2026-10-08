@@ -46,13 +46,16 @@ for (let i = 2; i < process.argv.length; i++) {
   args[k] = v;
 }
 const fail = msg => { console.error('✗ ' + msg); process.exit(1); };
+// Flag salah ketik (mis. --title_suffix) ditolak, supaya tidak diam-diam memakai nilai default.
+const KNOWN = ['slug', 'name', 'emoji', 'accent', 'tagline', 'description', 'keywords', 'title-suffix', 'short-name'];
+for (const k of Object.keys(args)) if (!KNOWN.includes(k)) fail(`flag tidak dikenal: --${k} (yang tersedia: ${KNOWN.map(x => '--' + x).join(', ')})`);
 for (const k of Object.keys(args)) args[k] = args[k].trim();
 for (const k of ['slug', 'name', 'emoji', 'tagline', 'description']) if (!args[k]) fail(`--${k} wajib diisi`);
 const slug = args.slug;
 if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)) fail('--slug harus kebab-case, contoh: tebak-hewan');
 if (slug === 'landing-page' || slug === 'assets') fail(`--slug "${slug}" sudah dipakai sistem`);
 const accentKey = args.accent || 'water';
-if (!ACCENTS[accentKey]) fail(`--accent harus salah satu dari: ${Object.keys(ACCENTS).join(', ')}`);
+if (!Object.hasOwn(ACCENTS, accentKey)) fail(`--accent harus salah satu dari: ${Object.keys(ACCENTS).join(', ')}`);
 const gameDir = path.join(root, 'games', slug);
 if (fs.existsSync(gameDir)) fail(`games/${slug} sudah ada`);
 // Prefix localStorage dari slug (tebak-hewan → tebakHewan) harus unik di antara game yang ada.
@@ -70,7 +73,8 @@ const ogLines = words.reduce((lines, w) => {
   return lines;
 }, []);
 const longest = Math.max(...ogLines.map(w => w.length));
-const today = new Date().toISOString().slice(0, 10);
+// Tanggal lokal (WIB), bukan UTC, supaya lastmod tidak mundur sehari saat dijalankan pagi hari.
+const today = new Date().toLocaleDateString('sv');   // format YYYY-MM-DD
 // short_name PWA (label di bawah ikon) maksimal 12 huruf. Kalau nama terlalu panjang dan --short-name
 // tidak diberikan: coba tanpa spasi ("Huruf&Angka"), kalau masih kepanjangan pakai kata pertama + peringatan.
 // Potong per karakter (bukan per unit UTF-16) supaya emoji tidak terbelah.

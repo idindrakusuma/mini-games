@@ -389,7 +389,9 @@ pad.addEventListener('pointerdown', e => {
   if (e.pointerType === 'touch' && (e.width * e.height > 3600 || Math.max(e.width, e.height) > 90)) return;
   // Pointer utama baru boleh mengambil alih kunci (supaya tidak macet kalau pointerup hilang),
   // tapi sentuhan tidak boleh merebut dari pena (telapak tangan saat menulis dengan stylus).
-  if (pointer !== null && (!e.isPrimary || (pointerType === 'pen' && e.pointerType !== 'pen'))) return;
+  // Kecuali pena sudah diam > 1,5 detik (pointerup-nya mungkin hilang): jari boleh mengambil alih.
+  const penBusy = pointerType === 'pen' && e.pointerType !== 'pen' && performance.now() - lastInput < 1500;
+  if (pointer !== null && (!e.isPrimary || penBusy)) return;
   pointerType = e.pointerType;
   pointer = e.pointerId; T.onTrack = false; T.needLift = false; wake();
   try { pad.setPointerCapture(e.pointerId); } catch (err) { /* pointer sudah tidak aktif: abaikan */ }

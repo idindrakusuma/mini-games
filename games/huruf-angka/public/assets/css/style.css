@@ -79,7 +79,7 @@ h1{
   padding:calc(env(safe-area-inset-top,0px) + 12px) calc(env(safe-area-inset-right,0px) + 14px) 0 calc(env(safe-area-inset-left,0px) + 14px);
 }
 .round{
-  width:56px; height:56px; border-radius:50%; border:0; background:var(--card); color:var(--text);
+  width:64px; height:64px;   /* target sentuh minimal 64px (lihat SKILL.md) */ border-radius:50%; border:0; background:var(--card); color:var(--text);
   font-size:1.7rem; box-shadow:0 4px 0 rgba(0,0,0,.2); display:grid; place-items:center; flex:none;
 }
 .round:active{ transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,.2); }

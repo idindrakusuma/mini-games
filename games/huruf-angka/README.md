@@ -16,7 +16,7 @@ Flash card huruf dan angka untuk balita. Ronde singkat, tampilan tenang, tanpa t
 
 ## Cara Main
 
-Pilih **Huruf** atau **Angka**, lalu pilih mode. Satu sesi berisi 5 kartu tanpa batas waktu, dan setiap sesi yang selesai memberi 1 bintang. Urutan yang disarankan: Kenalan → Tebak → Urutkan.
+Pilih **Huruf** atau **Angka**, lalu pilih mode. Satu sesi berisi 5 kartu (kecuali sesi Kenalan terakhir U–Z yang berisi 6) tanpa batas waktu, dan setiap sesi yang selesai memberi 1 bintang. Urutan yang disarankan: Kenalan → Tebak → Urutkan.
 
 ### 👀 Kenalan
 1. Satu kartu besar tampil lengkap dengan gambarnya, lalu dibacakan ("A. Apel!").
