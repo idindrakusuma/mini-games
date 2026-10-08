@@ -34,7 +34,8 @@ let CW = 0, CH = 0;
 function resize(){
   const dpr = Math.min(2, window.devicePixelRatio||1);
   CW = cv.clientWidth; CH = cv.clientHeight;
-  cv.width = Math.round(CW*dpr); cv.height = Math.round(CH*dpr);
+  const bw = Math.round(CW*dpr), bh = Math.round(CH*dpr);
+  if (cv.width !== bw || cv.height !== bh) { cv.width = bw; cv.height = bh; }   // hindari alokasi ulang yang tidak perlu
   ctx.setTransform(dpr,0,0,dpr,0,0);
 }
 // Ukur ulang setiap kali ukuran canvas berubah (rotasi, teks HUD berganti baris, font termuat),

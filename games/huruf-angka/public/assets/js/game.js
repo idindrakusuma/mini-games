@@ -325,11 +325,12 @@ $('#nextBtn').addEventListener('click', () => step(1));
 // Hanya jari yang memulai geseran yang dihitung (#cards memakai touch-action: pan-y).
 let sx = null, sid = null, swiped = false;
 cardsEl.addEventListener('pointerdown', e => { if (sid !== null) return; sx = e.clientX; sid = e.pointerId; swiped = false; });
-cardsEl.addEventListener('pointerup', e => {
+// pointerup/pointercancel didengarkan di window: jari bisa dilepas di luar kartu.
+addEventListener('pointerup', e => {
   if (e.pointerId !== sid) return; const dx = e.clientX - sx; sx = sid = null;
   if (Math.abs(dx) > 60) { swiped = true; setTimeout(() => { swiped = false; }, 0); step(dx < 0 ? 1 : -1); }
 });
-cardsEl.addEventListener('pointercancel', e => { if (e.pointerId === sid) sx = sid = null; });
+addEventListener('pointercancel', e => { if (e.pointerId === sid) sx = sid = null; });
 
 /* ---------- Layar: awal → menu (Huruf/Angka) → main ---------- */
 const NAMES = { huruf: ['Huruf', 'A'], angka: ['Angka', '1'] };
@@ -338,13 +339,13 @@ function showMenu(set){
   curSet = set;
   $('#menuTitle').textContent = NAMES[set][0];
   $('#menuGlyph').textContent = NAMES[set][1];
-  $('#menu').hidden = false;
+  $('#menu').hidden = false; $('#home').hidden = true;   // satu <main> yang tampil
 }
 document.querySelectorAll('#home .mode').forEach(b => b.addEventListener('click', () => { audio(); showMenu(b.dataset.set); }));
 document.querySelectorAll('#menu .mode').forEach(b => b.addEventListener('click', () => {
   audio(); lastGame = b.dataset.game; start(curSet, lastGame);
 }));
-$('#menuBack').addEventListener('click', () => { $('#menu').hidden = true; });
+$('#menuBack').addEventListener('click', () => { $('#menu').hidden = true; $('#home').hidden = false; });
 $('#speakBtn').addEventListener('click', () => { if (S && !S.locked) ask(); });
 $('#homeBtn').addEventListener('click', stop);
 $('#againBtn').addEventListener('click', () => start(curSet, lastGame));

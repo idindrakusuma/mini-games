@@ -137,16 +137,16 @@ new ResizeObserver(() => { if (T) { resize(); drawNow(); } }).observe(pad);
 // Mode gelap: ikuti data-theme kalau ada, kalau tidak ikuti pengaturan perangkat (sama seperti CSS).
 const darkMQ = matchMedia('(prefers-color-scheme: dark)');
 const isDark = () => { const t = document.documentElement.dataset.theme; return t ? t === 'dark' : darkMQ.matches; };
-darkMQ.addEventListener?.('change', () => redraw());
-new MutationObserver(() => redraw()).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+darkMQ.addEventListener?.('change', () => invalidate());
+new MutationObserver(() => invalidate()).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
 // Gambar hanya saat ada yang berubah. Loop animasi hanya berjalan selama titik hijau berdenyut.
 function redraw(){ if (T && !raf) raf = requestAnimationFrame(draw); }
-function drawNow(){ cancelAnimationFrame(raf); raf = 0; draw(performance.now()); }
+function drawNow(){ cancelAnimationFrame(raf); raf = 0; dirty = true; draw(performance.now()); }
 
 function open(ch){
   T = { ch, strokes: strokesOf(ch), si: 0, k: 0, finished: false, onTrack: false };
-  pointer = null; clearTimeout(starTimer); $('#toast').classList.remove('on');
+  pointer = null;
   const i = info(ch);
   $('#chip').textContent = ch;
   $('#say').textContent = 'Ikuti titik hijau, ya!';
@@ -157,7 +157,7 @@ function open(ch){
 }
 function close(){
   T = null; cancelAnimationFrame(raf); raf = 0; pointer = null; hush(); fxReset();
-  clearTimeout(starTimer); $('#toast').classList.remove('on');
+  $('#toast').classList.remove('on');
   play.classList.remove('on'); renderGrid(); showStars();
 }
 function nextChar(){
@@ -165,73 +165,89 @@ function nextChar(){
   open(list[(list.indexOf(T.ch) + 1) % list.length]);
 }
 
-function draw(now){
-  raf = 0;
-  if (!T) return;
-  const { s, dpr, ox, oy } = view;
-  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, pad.width, pad.height);
-  ctx.setTransform(s * dpr, 0, 0, s * dpr, ox * dpr, oy * dpr);
-  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+// Lapisan statis (garis bantu, jalur, goresan, panah) digambar ke canvas cadangan hanya saat
+// ada perubahan. Tiap frame animasi cukup menyalin lapisan itu lalu menggambar titik hijau.
+const bg = document.createElement('canvas'), bctx = bg.getContext('2d');
+let dirty = true;
+function invalidate(){ dirty = true; redraw(); }
+
+function paintStatic(){
+  const { s, dpr, ox, oy } = view, c = bctx;
+  if (bg.width !== pad.width || bg.height !== pad.height) { bg.width = pad.width; bg.height = pad.height; }
+  c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, bg.width, bg.height);
+  c.setTransform(s * dpr, 0, 0, s * dpr, ox * dpr, oy * dpr);
+  c.lineCap = 'round'; c.lineJoin = 'round';
   const dark = isDark();
 
   // Garis bantu: atas, tengah, dasar
-  ctx.lineWidth = 1.2 / s * 2;
+  c.lineWidth = 1.2 / s * 2;
   for (const [y, solid] of [[BOX.top, 0], [BOX.mid, 0], [BOX.base, 1]]) {
-    ctx.strokeStyle = dark ? 'rgba(255,255,255,.18)' : 'rgba(27,42,107,.14)';
-    ctx.setLineDash(solid ? [] : [6, 6]);
-    ctx.beginPath(); ctx.moveTo(-40, y); ctx.lineTo(BOX.w + 40, y); ctx.stroke();
+    c.strokeStyle = dark ? 'rgba(255,255,255,.18)' : 'rgba(27,42,107,.14)';
+    c.setLineDash(solid ? [] : [6, 6]);
+    c.beginPath(); c.moveTo(-40, y); c.lineTo(BOX.w + 40, y); c.stroke();
   }
-  ctx.setLineDash([]);
+  c.setLineDash([]);
 
   // Huruf samar = "jalan" putih dengan pinggiran tipis, supaya jelas ke mana jari bergerak
   for (const [w, col] of [[30, dark ? 'rgba(255,255,255,.28)' : 'rgba(27,42,107,.16)'], [26, dark ? '#1B4D7E' : '#FFFDF7']]) {
-    ctx.strokeStyle = ctx.fillStyle = col; ctx.lineWidth = w;
+    c.strokeStyle = c.fillStyle = col; c.lineWidth = w;
     for (const st of T.strokes) {
-      if (st.dot) { ctx.beginPath(); ctx.arc(st.pts[0].x, st.pts[0].y, w / 2, 0, 7); ctx.fill(); }
-      else ctx.stroke(st.path);
+      if (st.dot) { c.beginPath(); c.arc(st.pts[0].x, st.pts[0].y, w / 2, 0, 7); c.fill(); }
+      else c.stroke(st.path);
     }
   }
 
   // Goresan yang sudah ditulis
   const ink = T.finished ? (rainbowGrad ||= rainbow()) : ACCENT;
-  ctx.strokeStyle = ctx.fillStyle = ink; ctx.lineWidth = 15;
+  c.strokeStyle = c.fillStyle = ink; c.lineWidth = 15;
   T.strokes.forEach((st, i) => {
     if (i > T.si && !T.finished) return;
     const upto = (i < T.si || T.finished) ? st.pts.length - 1 : T.k;
-    if (st.dot) { if (i < T.si || T.finished) { ctx.beginPath(); ctx.arc(st.pts[0].x, st.pts[0].y, 9, 0, 7); ctx.fill(); } return; }
+    if (st.dot) { if (i < T.si || T.finished) { c.beginPath(); c.arc(st.pts[0].x, st.pts[0].y, 9, 0, 7); c.fill(); } return; }
     if (upto < 1) return;
-    ctx.beginPath(); ctx.moveTo(st.pts[0].x, st.pts[0].y);
-    for (let j = 1; j <= upto; j++) ctx.lineTo(st.pts[j].x, st.pts[j].y);
-    ctx.stroke();
+    c.beginPath(); c.moveTo(st.pts[0].x, st.pts[0].y);
+    for (let j = 1; j <= upto; j++) c.lineTo(st.pts[j].x, st.pts[j].y);
+    c.stroke();
   });
 
-  if (!T.finished) {
-    const st = T.strokes[T.si], p = st.pts[T.k];
-    // Panah arah di sisa jalur goresan aktif
-    if (!st.dot) {
-      ctx.strokeStyle = dark ? 'rgba(255,255,255,.55)' : 'rgba(123,74,214,.55)'; ctx.lineWidth = 3.2;
-      const gap = Math.round(22 / STEP);
-      for (let j = T.k + gap; j < st.pts.length - 2; j += gap) {
-        const a = st.pts[j - 2], b = st.pts[Math.min(j + 2, st.pts.length - 1)], c = st.pts[j];
-        const ang = Math.atan2(b.y - a.y, b.x - a.x);
-        ctx.beginPath();
-        ctx.moveTo(c.x - 6 * Math.cos(ang - .7), c.y - 6 * Math.sin(ang - .7));
-        ctx.lineTo(c.x, c.y);
-        ctx.lineTo(c.x - 6 * Math.cos(ang + .7), c.y - 6 * Math.sin(ang + .7));
-        ctx.stroke();
-      }
+  // Panah arah di sisa jalur goresan aktif
+  const st = T.strokes[T.si];
+  if (!T.finished && !st.dot) {
+    c.strokeStyle = dark ? 'rgba(255,255,255,.55)' : 'rgba(123,74,214,.55)'; c.lineWidth = 3.2;
+    const gap = Math.round(22 / STEP);
+    for (let j = T.k + gap; j < st.pts.length - 2; j += gap) {
+      const a = st.pts[j - 2], b = st.pts[Math.min(j + 2, st.pts.length - 1)], m = st.pts[j];
+      const ang = Math.atan2(b.y - a.y, b.x - a.x);
+      c.beginPath();
+      c.moveTo(m.x - 6 * Math.cos(ang - .7), m.y - 6 * Math.sin(ang - .7));
+      c.lineTo(m.x, m.y);
+      c.lineTo(m.x - 6 * Math.cos(ang + .7), m.y - 6 * Math.sin(ang + .7));
+      c.stroke();
     }
-    // Titik hijau berdenyut = posisi pensil sekarang
-    const pulse = reducedMotion ? 0 : (Math.sin(now / 250) + 1) / 2;
-    ctx.fillStyle = 'rgba(63,191,98,.25)'; ctx.beginPath(); ctx.arc(p.x, p.y, 13 + pulse * 7, 0, 7); ctx.fill();
-    ctx.fillStyle = '#3FBF62'; ctx.beginPath(); ctx.arc(p.x, p.y, 10, 0, 7); ctx.fill();
-    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p.x, p.y, 3.5, 0, 7); ctx.fill();
-    if (!reducedMotion) redraw();   // titik berdenyut: lanjutkan animasi
   }
+  dirty = false;
+}
+
+function draw(now){
+  raf = 0;
+  if (!T) return;
+  if (dirty) paintStatic();
+  const { s, dpr, ox, oy } = view;
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, pad.width, pad.height);
+  ctx.drawImage(bg, 0, 0);
+  if (T.finished) return;
+  // Titik hijau berdenyut = posisi pensil sekarang
+  const p = T.strokes[T.si].pts[T.k];
+  ctx.setTransform(s * dpr, 0, 0, s * dpr, ox * dpr, oy * dpr);
+  const pulse = reducedMotion ? 0 : (Math.sin(now / 250) + 1) / 2;
+  ctx.fillStyle = 'rgba(63,191,98,.25)'; ctx.beginPath(); ctx.arc(p.x, p.y, 13 + pulse * 7, 0, 7); ctx.fill();
+  ctx.fillStyle = '#3FBF62'; ctx.beginPath(); ctx.arc(p.x, p.y, 10, 0, 7); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p.x, p.y, 3.5, 0, 7); ctx.fill();
+  if (!reducedMotion) redraw();   // titik berdenyut: lanjutkan animasi (hanya menyalin lapisan statis)
 }
 let rainbowGrad = null;   // dibuat sekali, dipakai ulang setiap gambar
 function rainbow(){
-  const g = ctx.createLinearGradient(0, BOX.top, BOX.w, BOX.desc);
+  const g = bctx.createLinearGradient(0, BOX.top, BOX.w, BOX.desc);
   ['#FF5D8F','#FF9F1C','#FFD23F','#3FBF62','#47C9E5','#8B5CF6'].forEach((c, i, a) => g.addColorStop(i / (a.length - 1), c));
   return g;
 }
@@ -260,11 +276,11 @@ function follow(q){
   const tip = st.pts[T.k], nearTip = Math.hypot(q.x - tip.x, q.y - tip.y) < TOL * 1.2;
   if (best < 0 || (!T.onTrack && !nearTip && best - T.k > REENTRY)) { T.onTrack = false; return; }
   T.onTrack = true;
-  if (best > T.k) { T.k = best; sTick(); redraw(); }
+  if (best > T.k) { T.k = best; sTick(); invalidate(); }
   if (T.k >= st.pts.length - 1 - Math.round(8 / STEP)) strokeDone();
 }
 function strokeDone(){
-  T.si++; T.k = 0; T.onTrack = false; sStroke(); redraw();
+  T.si++; T.k = 0; T.onTrack = false; sStroke(); invalidate();
   if (T.si < T.strokes.length) return;
   // Selesai satu karakter
   T.finished = true; T.si = T.strokes.length - 1;
@@ -279,12 +295,12 @@ function strokeDone(){
   say(`hebat-${T.ch}`, i.done);
   if (count % PER_STAR === 0) {
     stars++; save('stars', stars);
-    starTimer = setTimeout(() => toast('⭐ +1 bintang!'), 900);
+    toast('⭐ +1 bintang!');
   }
 }
 
 // Hanya satu jari yang menulis. Sentuhan lain (telapak tangan, jari kedua) diabaikan.
-let pointer = null, starTimer = 0;
+let pointer = null;
 pad.addEventListener('pointerdown', e => {
   if (!T || pointer !== null) return;
   pointer = e.pointerId; T.onTrack = false;
@@ -304,7 +320,8 @@ const lift = e => {
   const st = T.strokes[T.si];
   if (!st.dot && T.k > 0 && (st.pts.length - 1 - T.k) * STEP <= 20) strokeDone();
 };
-pad.addEventListener('pointerup', lift); pad.addEventListener('pointercancel', lift);
+// Didengarkan di window: tetap tertangkap walau jari/mouse dilepas di luar papan atau capture gagal.
+addEventListener('pointerup', lift); addEventListener('pointercancel', lift);
 // Kalau browser melepas capture tanpa pointerup (misalnya gestur sistem), lepaskan kunci satu jari.
 pad.addEventListener('lostpointercapture', e => { if (e.pointerId === pointer) pointer = null; });
 
@@ -316,7 +333,8 @@ function fxReset(){ parts = []; cancelAnimationFrame(fxRaf); fxRaf = 0; fxClear(
 function burst(x, y, n = 36){
   if (reducedMotion) return;
   const dpr = Math.min(2, devicePixelRatio || 1);
-  if (fx.width !== fx.clientWidth * dpr) { fx.width = fx.clientWidth * dpr; fx.height = fx.clientHeight * dpr; fctx.setTransform(dpr,0,0,dpr,0,0); }
+  const fw = Math.round(fx.clientWidth * dpr), fh = Math.round(fx.clientHeight * dpr);
+  if (fx.width !== fw || fx.height !== fh) { fx.width = fw; fx.height = fh; fctx.setTransform(dpr,0,0,dpr,0,0); }
   const cols = ['#FFD23F','#FF8FB8','#47C9E5','#7BD88F','#B98CFF'];
   for (let i = 0; i < n; i++) {
     const a = Math.random() * Math.PI * 2, v = 160 + Math.random() * 260;
