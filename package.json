@@ -10,6 +10,7 @@
     "dev": "node scripts/build.mjs && npx serve dist",
     "pemburu-kuman:images": "node games/pemburu-kuman/scripts/generate-images.mjs",
     "pemburu-kuman:promo": "node games/pemburu-kuman/scripts/generate-promo.mjs",
+    "promo": "node scripts/build.mjs && node scripts/promo/capture.mjs && node scripts/promo/render.mjs",
     "pemburu-kuman:vendor": "node games/pemburu-kuman/scripts/fetch-vendor.mjs",
     "landing-page:images": "node games/landing-page/scripts/generate-images.mjs",
     "huruf-angka:images": "node games/huruf-angka/scripts/generate-images.mjs",

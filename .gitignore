@@ -3,3 +3,6 @@ dist/
 .vercel/
 .DS_Store
 *.log
+# video promo: rekaman frame & hasil render (dibuat ulang dengan `npm run promo`)
+promo/.cache/
+promo/threads/
