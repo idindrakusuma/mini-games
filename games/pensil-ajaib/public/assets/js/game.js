@@ -172,8 +172,12 @@ function open(ch){
   $('#chip').textContent = ch;
   $('#say').textContent = 'Ikuti titik hijau, ya!';
   $('#nextBtn').classList.remove('ready');
-  play.classList.add('on'); $('#home').hidden = true; fxReset(); resize();   // grid di belakang tidak bisa difokus
-  play.focus({ preventScroll: true });   // fokus ke area main (bukan tombol), jadi Enter tidak memicu apa-apa
+  const opening = !play.classList.contains('on');
+  // Grid di belakang dibuat inert (tetap tampil & posisi scroll terjaga, tapi tidak bisa difokus/diklik).
+  play.classList.add('on'); $('#home').inert = true; fxReset(); resize();
+  // Baru dibuka dari grid: fokus ke area main (bukan tombol), jadi Enter tidak memicu apa-apa.
+  // Dari ▶/↺ di dalam papan, fokus dibiarkan di tombol itu.
+  if (opening) play.focus({ preventScroll: true });
   say(`tulis-${ch}`, i.ask);
   lastInput = performance.now(); drawNow();
 }
@@ -181,8 +185,8 @@ function close(){
   const ch = T?.ch;
   T = null; cancelAnimationFrame(raf); raf = 0; pointer = null; hush(); fxReset();
   $('#toast').classList.remove('on');
-  play.classList.remove('on'); $('#home').hidden = false; renderGrid(); showStars();
-  if (ch) document.querySelector(`.ch[data-ch="${ch}"]`)?.focus({ preventScroll: true });   // kembali ke huruf terakhir
+  play.classList.remove('on'); $('#home').inert = false; renderGrid(); showStars();
+  if (ch) document.querySelector(`.ch[data-ch="${ch}"]`)?.focus();   // kembali ke huruf terakhir (scroll ke sana kalau perlu)
 }
 function nextChar(){
   const list = SETS[/\d/.test(T.ch) ? 'angka' : T.ch === T.ch.toUpperCase() ? 'besar' : 'kecil'];

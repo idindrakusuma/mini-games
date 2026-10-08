@@ -45,7 +45,9 @@ new ResizeObserver(() => {
   if(!running) return;
   resize();
   // Setelah rotasi, gelembung di luar lebar baru ditarik masuk supaya tetap bisa diketuk.
-  for(const it of items) it.x = Math.min(Math.max(it.x, it.r), Math.max(it.r, CW - it.r));
+  // Sisakan 6px untuk goyangan kiri-kanan (it.x + wob) supaya gelembung tetap utuh di layar.
+  const pad = r => r + 6;
+  for(const it of items) it.x = Math.min(Math.max(it.x, pad(it.r)), Math.max(pad(it.r), CW - pad(it.r)));
 }).observe(cv);
 
 /* ---------- Gameplay (ganti bagian ini) ---------- */
@@ -59,8 +61,9 @@ function spawn(){
 function setCounter(){ $('#counter').textContent = `{{EMOJI}} ${left}`; }
 
 function start(){
-  // Layar awal disembunyikan supaya Enter/Spasi tidak menekan "Main!" lagi di tengah ronde.
-  play.classList.add('on'); $('#home').hidden = true; $('#winSheet').classList.remove('on'); clearTimeout(winTimer);
+  // Layar awal dibuat inert (tetap tampil, tapi tidak bisa difokus/diklik) supaya Enter/Spasi
+  // tidak menekan "Main!" lagi di tengah ronde.
+  play.classList.add('on'); $('#home').inert = true; sheet(false); clearTimeout(winTimer);
   resize(); items = []; left = GOAL; setCounter();
   for(let i = 0; i < 3; i++) spawn();
   $('#tip').textContent = 'Ketuk gelembungnya!';
@@ -69,8 +72,8 @@ function start(){
 }
 function stop(){
   running = false; clearTimeout(winTimer); cancelAnimationFrame(raf);
-  play.classList.remove('on'); $('#home').hidden = false; showStars();
-  $('#startBtn').focus({ preventScroll: true });
+  play.classList.remove('on'); $('#home').inert = false; sheet(false); showStars();
+  $('#startBtn').focus();
 }
 
 function loop(now){
@@ -102,10 +105,16 @@ cv.addEventListener('pointerdown', e => {
 });
 
 let winTimer = 0;
+// Layar menang: HUD & canvas di belakangnya inert, fokus ke "Main lagi".
+function sheet(on){
+  $('#winSheet').classList.toggle('on', on);
+  $('.hud').inert = cv.inert = on;
+  if (on) $('#againBtn').focus({ preventScroll: true });
+}
 function win(){
   stars++; saveStars(); sWin(); $('#tip').textContent = '';
   // Setelah animasi pecah terakhir selesai, tampilkan layar menang dan hentikan loop gambar (hemat baterai).
-  winTimer = setTimeout(() => { $('#winSheet').classList.add('on'); running = false; cancelAnimationFrame(raf); }, 600);
+  winTimer = setTimeout(() => { sheet(true); running = false; cancelAnimationFrame(raf); }, 600);
 }
 
 /* ---------- Tombol ---------- */

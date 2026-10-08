@@ -192,11 +192,19 @@ function start(set, game){
     const starts = shuffle([...Array(items.length - n + 1).keys()]);
     S.targets = Array.from({ length: ROUND }, (_, i) => starts[i % starts.length]);
   }
-  $('#winSheet').classList.remove('on'); fxReset();
-  // Menu di belakang overlay disembunyikan supaya Enter/Tab tidak mengenai tombolnya di tengah ronde.
-  play.classList.add('on'); $('#menu').hidden = true;
+  sheet(false); fxReset();
+  // Menu di belakang overlay dibuat inert (tetap tampil & posisi scroll terjaga, tapi tidak bisa
+  // difokus/diklik), supaya Enter/Tab tidak mengenai tombolnya di tengah ronde.
+  play.classList.add('on'); $('#menu').inert = true;
   question();
   play.focus({ preventScroll: true });   // fokus ke area main (bukan tombol), jadi Enter tidak memicu apa-apa
+}
+
+// Layar menang: HUD & papan di belakangnya inert, fokus ke "Main lagi".
+function sheet(on){
+  $('#winSheet').classList.toggle('on', on);
+  $('#play .hud').inert = $('#play .board').inert = on;
+  if (on) $('#againBtn').focus({ preventScroll: true });
 }
 
 function dots(){
@@ -226,6 +234,8 @@ new ResizeObserver(() => {
 
 function question(){
   clearTimeout(timer); dots();
+  // Kalau fokus keyboard ada di salah satu kartu, pindahkan ke kartu pertama soal baru (bukan jatuh ke <body>).
+  const keepFocus = cardsEl.contains(document.activeElement);
   cardsEl.innerHTML = ''; slotsEl.innerHTML = ''; S.locked = false; S.wrong = 0;
   $('#nav').hidden = S.game !== 'kenal';
   askEl.textContent = S.game === 'kenal' ? S.targets[S.q].label
@@ -258,6 +268,7 @@ function question(){
       cardsEl.append(c);
     }
   }
+  if (keepFocus) cardsEl.firstElementChild?.focus({ preventScroll: true });
   ask();
 }
 
@@ -303,7 +314,9 @@ function tapOrder(card, item){
   S.wrong = 0; sRight();
   const slot = slotsEl.children[S.step];
   slot.textContent = item.glyph; slot.classList.add('filled');
+  const hadFocus = document.activeElement === card;
   card.classList.remove('hint'); card.style.visibility = 'hidden'; card.classList.add('used');
+  if (hadFocus) [...cardsEl.children].find(c => !c.classList.contains('used'))?.focus({ preventScroll: true });
   S.step++;
   if (S.step < S.n) { say(`nama-${S.set}-${item.glyph}`, item.say); return; }
   S.locked = true;
@@ -329,12 +342,12 @@ function next(){
   const c = $('.board').getBoundingClientRect();
   burst(c.left + c.width / 2, c.top + c.height / 3, 80);
   say('hore', 'Hore! Kamu hebat! Dapat satu bintang!');
-  later(() => $('#winSheet').classList.add('on'), 700);
+  later(() => sheet(true), 700);
 }
 
 function stop(){
   clearTimeout(timer); hush(); fxReset(); S = null;
-  play.classList.remove('on'); $('#winSheet').classList.remove('on'); $('#menu').hidden = false;
+  play.classList.remove('on'); sheet(false); $('#menu').inert = false;
   showStars();
   document.querySelector(`#menu .mode[data-game="${lastGame}"]`)?.focus({ preventScroll: true });   // kembali ke tombol asal
 }
