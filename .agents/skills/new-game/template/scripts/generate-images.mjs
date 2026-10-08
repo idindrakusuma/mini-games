@@ -15,6 +15,8 @@ const EXTRA_JS = [/* 'public/assets/js/karakter.js' */].map(f => fs.readFileSync
 const fontLink = '<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">';
 
 // ART(c, x, y, r): gambar karakter utama berpusat di (x, y) dengan "jari-jari" r.
+// ART baru dipanggil setelah font Baloo 2 termuat, jadi teks di canvas boleh memakai
+// c.font = '800 100px "Baloo 2"' tanpa jatuh ke font cadangan.
 const ART = `function ART(c,x,y,r){
   c.fillStyle='{{ACCENT}}'; c.beginPath(); c.arc(x,y,r,0,7); c.fill();
   c.fillStyle='rgba(255,255,255,.35)'; c.beginPath(); c.arc(x-r*.35,y-r*.4,r*.22,0,7); c.fill();
@@ -37,27 +39,28 @@ canvas{position:absolute;right:40px;top:35px}
 <div class="url">mini-games.indrakusuma.dev/{{SLUG}}</div>
 <canvas id="c" width="520" height="560"></canvas>
 <script>${EXTRA_JS}</script><script>${ART}
-ART(document.getElementById('c').getContext('2d'),260,280,200);
+document.fonts.load('800 100px "Baloo 2"').then(()=>{ART(document.getElementById('c').getContext('2d'),260,280,200);window.done=1;});
 </script></body></html>`;
 
 // full: kotak penuh (ikon app); false: sudut membulat (favicon)
-const icon = (S, full) => `<!doctype html><html><head><style>html,body{margin:0;background:transparent}</style></head><body>
+const icon = (S, full) => `<!doctype html><html><head>${fontLink}<style>html,body{margin:0;background:transparent}</style></head><body>
 <canvas id="c" width="${S}" height="${S}"></canvas><script>${EXTRA_JS}</script><script>${ART}
 const c=document.getElementById('c').getContext('2d'), S=${S};
 c.fillStyle='{{BG}}'; ${full ? 'c.fillRect(0,0,S,S);' : 'c.beginPath();c.roundRect(0,0,S,S,S*.22);c.fill();'}
-ART(c,S/2,S/2,S*${full ? .3 : .4});
+document.fonts.load('800 100px "Baloo 2"').then(()=>{ART(c,S/2,S/2,S*${full ? .3 : .4});window.done=1;});
 </script></body></html>`;
 
 const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
 const page = await browser.newPage({ viewport: { width: 1200, height: 630 } });
 await page.setContent(og, { waitUntil: 'networkidle' });
-await page.evaluate(() => document.fonts.ready);
+await page.waitForFunction(() => window.done);
 await page.screenshot({ path: out('images/og-image.png') });
 for (const [name, size, full] of [['icon-512.png', 512, 1], ['icon-192.png', 192, 1], ['apple-touch-icon.png', 180, 1], ['favicon-32.png', 32, 0]]) {
   // Page baru per ikon: setContent di page yang sama tidak membuang deklarasi `const`,
   // jadi script kedua gagal (identifier sudah ada) dan canvas tetap kosong.
   const ip = await browser.newPage({ viewport: { width: size, height: size } });
-  await ip.setContent(icon(size, full));
+  await ip.setContent(icon(size, full), { waitUntil: 'networkidle' });
+  await ip.waitForFunction(() => window.done);
   await ip.locator('#c').screenshot({ path: out('icons/' + name), omitBackground: true });
 }
 await browser.close();
