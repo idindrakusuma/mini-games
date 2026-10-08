@@ -268,7 +268,7 @@ const VIDEOS = {
         const top = 700 + (1 - easeOut(prog(t, S.pk + .3, S.pk + .9))) * 1300 + out * 1200;
         await phone('pemburu-kuman-tangan', segTime(this.pk, t - S.pkPlay), W / 2, top, 460);
         const won = this.pkWin;
-        captions(t - S.pkPlay, [[0, 2.3, 'Kumannya muncul di tangan 🦠', SOAP], [2.4, won - .1, 'Digosok… kumannya kabur! 🧼', WATER], [won, segLen(this.pk), 'Bersih! Dapat bintang ⭐', SUN]], 1800);
+        captions(t - S.pkPlay, [[0, 2.3, 'Kumannya muncul di tangan 🦠', SOAP], [2.4, won - .1, 'Digosok… kumannya kabur! 🧼', WATER], [won, segLen(this.pk), 'Bersih! Dapat bintang ⭐', LEAF]], 1800);
         return;
       }
       if (t < S.games) {   // 3. "Terus kepikiran game lain…"
@@ -352,7 +352,8 @@ const VIDEOS = {
     [2.7, 4.2, 'Nggak muat? Balik lagi 😄', SOAP],
     [4.3, 7.2, 'Pas! Namanya disebut 🔊', SUN],
     [7.3, 10.4, 'Makin banyak bentuk ⭐', WATER],
-    [10.5, 17.3, 'Lalu cocokkan warnanya 🎨', SOAP],
+    [10.5, 14.8, 'Lalu cocokkan warnanya 🎨', SOAP],
+    [14.9, 17.3, 'Hore! Dapat bintang ⭐', WATER],
   ]),
 };
 
