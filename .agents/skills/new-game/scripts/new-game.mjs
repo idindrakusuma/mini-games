@@ -70,11 +70,21 @@ const ogLines = words.reduce((lines, w) => {
 }, []);
 const longest = Math.max(...ogLines.map(w => w.length));
 const today = new Date().toISOString().slice(0, 10);
+// short_name PWA (label di bawah ikon) maksimal 12 huruf. Kalau nama terlalu panjang dan --short-name
+// tidak diberikan: coba tanpa spasi ("Huruf&Angka"), kalau masih kepanjangan pakai kata pertama + peringatan.
+function shortName(){
+  if (args['short-name']) return args['short-name'].slice(0, 12);
+  if (name.length <= 12) return name;
+  const compact = name.replace(/\s+/g, '');
+  if (compact.length <= 12) return compact;
+  console.warn(`! short_name dipotong jadi "${words[0].slice(0, 12)}"; pakai --short-name untuk label ikon yang lebih pas`);
+  return words[0].slice(0, 12);
+}
 const V = {
   SLUG: slug,
   NAME: name,
   // short_name PWA: maksimal 12 huruf supaya tidak terpotong di bawah ikon (bisa diatur dengan --short-name)
-  SHORT_NAME: (args['short-name'] || (name.length <= 12 ? name : words[0])).slice(0, 12),
+  SHORT_NAME: shortName(),
   EMOJI: args.emoji,
   TAGLINE: args.tagline.trim(),
   DESCRIPTION: args.description.trim(),

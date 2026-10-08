@@ -30,6 +30,8 @@ const WORDS = {
 const NUMS = ['nol','satu','dua','tiga','empat','lima','enam','tujuh','delapan','sembilan'];
 const NUM_PICS = ['','🐥','🍎','⭐','🐟','🎈','🍓','🐞','🌸','🍪'];
 const cap = w => w[0].toUpperCase() + w.slice(1);
+// Satu tempat untuk menentukan kelompok karakter: 'besar', 'kecil', atau 'angka'.
+const setOf = ch => /\d/.test(ch) ? 'angka' : ch === ch.toUpperCase() ? 'besar' : 'kecil';
 function info(ch){
   if (/\d/.test(ch)) {
     const n = +ch;
@@ -37,7 +39,7 @@ function info(ch){
              label: `${ch}, ${NUMS[n]}! ${NUM_PICS[n].repeat(n)}`.trim() };
   }
   const [say, word, pic] = WORDS[ch.toUpperCase()];
-  const size = ch === ch.toUpperCase() ? 'besar' : 'kecil';
+  const size = setOf(ch);
   return { ask: `Ayo tulis huruf ${say} ${size}!`,
            done: word ? `Hebat! ${say}. ${word}!` : `Hebat! Huruf ${say}!`,
            label: word ? `${ch} · ${word} ${pic}` : `${ch} · Hebat! ⭐` };
@@ -80,7 +82,8 @@ const sTick = () => { const n = performance.now(); if (n - lastTick < 90) return
 /* ---------- Simpanan (per perangkat) ---------- */
 const load = (k, d) => { try { const v = localStorage.getItem(`${STORE}.${k}`); return v == null ? d : JSON.parse(v); } catch(e) { return d; } };
 const save = (k, v) => { try { localStorage.setItem(`${STORE}.${k}`, JSON.stringify(v)); } catch(e) {} };
-// Bintang dari 5 karakter BERBEDA yang selesai (mengulang huruf yang sama tidak menambah).
+// Bintang dari 5 karakter BERBEDA yang selesai: mengulang huruf yang sama dalam satu putaran
+// bintang tidak menambah hitungan. Setelah bintang didapat, hitungan mulai lagi dari nol.
 // Isi localStorage bisa rusak/beda bentuk: validasi tipe sebelum dipakai.
 const loadNum = (k, d) => { const v = load(k, d); return Number.isFinite(v) && v >= 0 ? v : d; };
 const loadArr = k => { const v = load(k, []); return Array.isArray(v) ? v.filter(x => typeof x === 'string') : []; };
@@ -116,13 +119,26 @@ function glyphSvg(ch){
   return `<svg viewBox="0 10 120 165" aria-hidden="true">${parts}</svg>`;
 }
 // Label untuk pembaca layar: bedakan huruf besar/kecil ("A besar", "a kecil", "angka 3").
-const labelOf = ch => /\d/.test(ch) ? `angka ${ch}` : `${ch} ${ch === ch.toUpperCase() ? 'besar' : 'kecil'}`;
+const labelOf = ch => setOf(ch) === 'angka' ? `angka ${ch}` : `${ch} ${setOf(ch)}`;
 function renderGrid(){
-  document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.set === tab)));
+  document.querySelectorAll('.tab').forEach(t => {
+    const on = t.dataset.set === tab;
+    t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1;   // pola tab ARIA: hanya tab aktif di urutan Tab
+    if (on) $('#grid').setAttribute('aria-labelledby', t.id);
+  });
   $('#grid').innerHTML = SETS[tab].map(ch =>
     `<button class="ch" data-ch="${ch}" aria-label="${labelOf(ch)}">${glyphSvg(ch)}${done[ch] ? '<span class="ok" aria-hidden="true">✓</span>' : ''}</button>`).join('');
 }
-document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => { tab = t.dataset.set; renderGrid(); }));
+const tabs = [...document.querySelectorAll('.tab')];
+tabs.forEach(t => t.addEventListener('click', () => { tab = t.dataset.set; renderGrid(); }));
+// Panah kiri/kanan (dan Home/End) berpindah tab, sesuai pola tab ARIA.
+$('.tabs').addEventListener('keydown', e => {
+  const i = tabs.findIndex(t => t.dataset.set === tab);
+  const j = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1 }[e.key];
+  if (j === undefined) return;
+  e.preventDefault();
+  const t = tabs[(j + tabs.length) % tabs.length]; tab = t.dataset.set; renderGrid(); t.focus();
+});
 $('#grid').addEventListener('click', e => { const b = e.target.closest('.ch'); if (b) { audio(); open(b.dataset.ch); } });
 renderGrid();
 
@@ -189,7 +205,7 @@ function close(){
   if (ch) document.querySelector(`.ch[data-ch="${ch}"]`)?.focus();   // kembali ke huruf terakhir (scroll ke sana kalau perlu)
 }
 function nextChar(){
-  const list = SETS[/\d/.test(T.ch) ? 'angka' : T.ch === T.ch.toUpperCase() ? 'besar' : 'kecil'];
+  const list = SETS[setOf(T.ch)];
   open(list[(list.indexOf(T.ch) + 1) % list.length]);
 }
 

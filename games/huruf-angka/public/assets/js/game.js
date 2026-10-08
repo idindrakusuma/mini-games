@@ -115,8 +115,11 @@ function fit(n, W, H, max, gap){
     // Baris lebih sedikit lebih enak dilihat; tambah baris hanya kalau kartu jadi jauh lebih besar.
     if (w > best.size * 1.25) best = { size: Math.floor(w), cols };
   }
+  // Layar sangat pendek: jangan sampai kartu mengecil ke 0 (tidak bisa disentuh); papan bisa di-scroll.
+  best.size = Math.max(best.size, MIN_CARD);
   return best;
 }
+const MIN_CARD = 56;
 // Batasi lebar wadah agar kartu benar-benar membungkus sesuai jumlah kolom pilihan fit().
 // Jarak antarkartu dibaca dari CSS (.cards gap), bukan disalin ke sini.
 const gapOf = el => parseFloat(getComputedStyle(el).columnGap) || 0;
@@ -235,7 +238,7 @@ new ResizeObserver(() => {
 function question(){
   clearTimeout(timer); dots();
   // Kalau fokus keyboard ada di salah satu kartu, pindahkan ke kartu pertama soal baru (bukan jatuh ke <body>).
-  const keepFocus = cardsEl.contains(document.activeElement);
+  const keepFocus = cardsEl.contains(document.activeElement) || S.kbFocus; S.kbFocus = false;
   cardsEl.innerHTML = ''; slotsEl.innerHTML = ''; S.locked = false; S.wrong = 0;
   $('#nav').hidden = S.game !== 'kenal';
   askEl.textContent = S.game === 'kenal' ? S.targets[S.q].label
@@ -245,8 +248,10 @@ function question(){
   if (S.game === 'kenal') {
     const item = S.targets[S.q];
     const c = makeCard(item); c.style.setProperty('--size', size + 'px'); c.classList.add('show');
-    c.addEventListener('click', () => { if (swiped) { swiped = false; return; } if (!S.locked) ask(); });
+    c.addEventListener('click', () => { if (performance.now() - swipedAt < 400) return; if (!S.locked) ask(); });
     cardsEl.append(c);
+    // Tombol ◀ yang dinonaktifkan kehilangan fokus: oper fokusnya ke ▶.
+    if (S.q === 0 && document.activeElement === $('#prevBtn')) $('#nextBtn').focus({ preventScroll: true });
     $('#prevBtn').disabled = S.q === 0;
   } else if (S.game === 'tebak') {
     const target = S.targets[S.q];
@@ -316,7 +321,11 @@ function tapOrder(card, item){
   slot.textContent = item.glyph; slot.classList.add('filled');
   const hadFocus = document.activeElement === card;
   card.classList.remove('hint'); card.style.visibility = 'hidden'; card.classList.add('used');
-  if (hadFocus) [...cardsEl.children].find(c => !c.classList.contains('used'))?.focus({ preventScroll: true });
+  if (hadFocus) {
+    const nextCard = [...cardsEl.children].find(c => !c.classList.contains('used'));
+    // Kartu terakhir: tidak ada kartu lagi, jadi tahan fokus di area main dan pindahkan ke soal berikutnya.
+    if (nextCard) nextCard.focus({ preventScroll: true }); else { S.kbFocus = true; play.focus({ preventScroll: true }); }
+  }
   S.step++;
   if (S.step < S.n) { say(`nama-${S.set}-${item.glyph}`, item.say); return; }
   S.locked = true;
@@ -367,14 +376,15 @@ $('#nextBtn').addEventListener('click', () => step(1));
 // Geser juga memicu "click" setelah pointerup; tandai supaya kartu tidak ikut membacakan ulang.
 // Penanda dibersihkan di tugas berikutnya, jadi ketukan/Enter sesudahnya tetap membacakan kartu.
 // Hanya jari yang memulai geseran yang dihitung (#cards memakai touch-action: pan-y).
-let sx = null, sid = null, swiped = false;
+let sx = null, sid = null, swipedAt = -1e9;
 // Jari pertama (pointer utama) selalu memulai geseran baru, jadi pelacakan tidak bisa macet
 // kalau pointerup sebelumnya hilang (misalnya dilepas di luar jendela). Jari tambahan diabaikan.
-cardsEl.addEventListener('pointerdown', e => { if (sid !== null && !e.isPrimary) return; sx = e.clientX; sid = e.pointerId; swiped = false; });
+cardsEl.addEventListener('pointerdown', e => { if (sid !== null && !e.isPrimary) return; sx = e.clientX; sid = e.pointerId; });
 // pointerup/pointercancel didengarkan di window: jari bisa dilepas di luar kartu.
 addEventListener('pointerup', e => {
   if (e.pointerId !== sid) return; const dx = e.clientX - sx; sx = sid = null;
-  if (Math.abs(dx) > 60) { swiped = true; setTimeout(() => { swiped = false; }, 0); step(dx < 0 ? 1 : -1); }
+  // "click" sesudah geseran diabaikan berdasarkan waktu (tidak bergantung urutan event di browser).
+  if (Math.abs(dx) > 60) { swipedAt = performance.now(); step(dx < 0 ? 1 : -1); }
 });
 addEventListener('pointercancel', e => { if (e.pointerId === sid) sx = sid = null; });
 
@@ -387,11 +397,17 @@ function showMenu(set){
   $('#menuGlyph').textContent = NAMES[set][1];
   $('#menu').hidden = false; $('#home').hidden = true;   // satu <main> yang tampil
 }
-document.querySelectorAll('#home .mode').forEach(b => b.addEventListener('click', () => { audio(); showMenu(b.dataset.set); }));
+document.querySelectorAll('#home .mode').forEach(b => b.addEventListener('click', () => {
+  audio(); showMenu(b.dataset.set);
+  $('#menu .mode').focus({ preventScroll: true });   // fokus ikut pindah ke layar menu
+}));
 document.querySelectorAll('#menu .mode').forEach(b => b.addEventListener('click', () => {
   audio(); lastGame = b.dataset.game; start(curSet, lastGame);
 }));
-$('#menuBack').addEventListener('click', () => { $('#menu').hidden = true; $('#home').hidden = false; });
+$('#menuBack').addEventListener('click', () => {
+  $('#menu').hidden = true; $('#home').hidden = false;
+  document.querySelector(`#home .mode[data-set="${curSet}"]`)?.focus();   // kembali ke tombol Huruf/Angka asal
+});
 $('#speakBtn').addEventListener('click', () => { if (S && !S.locked) ask(); });
 $('#homeBtn').addEventListener('click', stop);
 $('#againBtn').addEventListener('click', () => start(curSet, lastGame));

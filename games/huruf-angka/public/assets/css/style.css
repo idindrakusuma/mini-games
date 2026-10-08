@@ -54,10 +54,9 @@ h1{
   box-shadow:0 7px 0 rgba(27,42,107,.25); transition:transform .12s, box-shadow .12s;
 }
 .mode:active{ transform:translateY(5px); box-shadow:0 2px 0 rgba(27,42,107,.25); }
-.mode .ico{ font-size:2.8rem; line-height:1.1; }
+.mode .ico{ display:block; font-size:2.8rem; line-height:1.1; }
 .mode b{ font-size:1.35rem; font-weight:800; line-height:1.1; }
 .mode small{ font-size:1rem; font-weight:500; opacity:.85; }
-.mode .ico{ display:block; }
 
 /* ---------- Menu per set ---------- */
 #menu{ position:fixed; inset:0; background:var(--bg); z-index:1; }
@@ -91,7 +90,7 @@ h1{
 .dots i.done{ background:var(--accent); transform:scale(1.15); }
 .dots i.now{ box-shadow:0 0 0 3px var(--accent); }
 .board{
-  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px;
+  flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; align-items:center; justify-content:center; justify-content:safe center; gap:22px;
   padding:12px calc(env(safe-area-inset-right,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 24px) calc(env(safe-area-inset-left,0px) + 16px);
 }
 .ask{ margin:0; font-size:clamp(1.3rem, 6vw, 2rem); font-weight:800; text-align:center; min-height:1.3em; }
