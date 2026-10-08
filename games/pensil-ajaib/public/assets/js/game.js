@@ -79,7 +79,8 @@ const sTick = () => { const n = performance.now(); if (n - lastTick < 90) return
 /* ---------- Simpanan (per perangkat) ---------- */
 const load = (k, d) => { try { const v = localStorage.getItem(`${STORE}.${k}`); return v == null ? d : JSON.parse(v); } catch(e) { return d; } };
 const save = (k, v) => { try { localStorage.setItem(`${STORE}.${k}`, JSON.stringify(v)); } catch(e) {} };
-let stars = load('stars', 0), count = load('count', 0);
+// Bintang dari 5 karakter BERBEDA yang selesai (mengulang huruf yang sama tidak menambah).
+let stars = load('stars', 0), pending = new Set(load('pending', []));
 const done = load('done', {});        // { 'A': 1, 'a': 1, ... } — kunci peka huruf besar/kecil
 function showStars(){ $('#starsHome').textContent = `⭐ ${stars} bintang`; }
 showStars();
@@ -123,6 +124,8 @@ let T = null;          // { ch, strokes, si (goresan aktif), k (titik terjauh), 
 let view = { s: 1, ox: 0, oy: 0 }, raf = 0;
 // Warna diambil dari token CSS saat menggambar, jadi selalu sama dengan tema halaman.
 const token = (name, fallback) => getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+let colors = null;   // di-cache; dikosongkan saat tema berganti
+const readColors = () => ({ lane: token('--card', '#FFFDF7'), accent: token('--accent', '#B98CFF') });
 
 function resize(){
   const dpr = Math.min(2, devicePixelRatio || 1), W = pad.clientWidth, H = pad.clientHeight;
@@ -138,8 +141,8 @@ new ResizeObserver(() => { if (T) { resize(); drawNow(); } }).observe(pad);
 // Mode gelap: ikuti data-theme kalau ada, kalau tidak ikuti pengaturan perangkat (sama seperti CSS).
 const darkMQ = matchMedia('(prefers-color-scheme: dark)');
 const isDark = () => { const t = document.documentElement.dataset.theme; return t ? t === 'dark' : darkMQ.matches; };
-darkMQ.addEventListener?.('change', () => invalidate());
-new MutationObserver(() => invalidate()).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+darkMQ.addEventListener?.('change', () => { colors = null; invalidate(); });
+new MutationObserver(() => { colors = null; invalidate(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
 // Gambar hanya saat ada yang berubah. Loop animasi hanya berjalan selama titik hijau berdenyut.
 function redraw(){ if (T && !raf) raf = requestAnimationFrame(draw); }
@@ -154,7 +157,7 @@ function open(ch){
   $('#nextBtn').classList.remove('ready');
   play.classList.add('on'); fxReset(); resize();
   say(`tulis-${ch}`, i.ask);
-  drawNow();
+  lastInput = performance.now(); drawNow();
 }
 function close(){
   T = null; cancelAnimationFrame(raf); raf = 0; pointer = null; hush(); fxReset();
@@ -169,6 +172,8 @@ function nextChar(){
 // Lapisan statis (garis bantu, jalur, goresan, panah) digambar ke canvas cadangan hanya saat
 // ada perubahan. Tiap frame animasi cukup menyalin lapisan itu lalu menggambar titik hijau.
 const bg = document.createElement('canvas'), bctx = bg.getContext('2d');
+let lastInput = performance.now();
+pad.addEventListener('pointerdown', () => { lastInput = performance.now(); redraw(); });
 let dirty = true;
 function invalidate(){ dirty = true; redraw(); }
 
@@ -178,7 +183,7 @@ function paintStatic(){
   c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, bg.width, bg.height);
   c.setTransform(s * dpr, 0, 0, s * dpr, ox * dpr, oy * dpr);
   c.lineCap = 'round'; c.lineJoin = 'round';
-  const dark = isDark(), lane = token('--card', '#FFFDF7'), accent = token('--accent', '#B98CFF');
+  const dark = isDark(), { lane, accent } = (colors ||= readColors());
 
   // Garis bantu: atas, tengah, dasar
   c.lineWidth = 1.2 / s * 2;
@@ -240,11 +245,12 @@ function draw(now){
   // Titik hijau berdenyut = posisi pensil sekarang
   const p = T.strokes[T.si].pts[T.k];
   ctx.setTransform(s * dpr, 0, 0, s * dpr, ox * dpr, oy * dpr);
-  const pulse = reducedMotion ? 0 : (Math.sin(now / 250) + 1) / 2;
+  // Denyut berhenti setelah 6 detik tanpa sentuhan (hemat baterai); sentuhan berikutnya menyalakannya lagi.
+  const idle = now - lastInput > 6000, pulse = reducedMotion || idle ? 0 : (Math.sin(now / 250) + 1) / 2;
   ctx.fillStyle = 'rgba(63,191,98,.25)'; ctx.beginPath(); ctx.arc(p.x, p.y, 13 + pulse * 7, 0, 7); ctx.fill();
   ctx.fillStyle = '#3FBF62'; ctx.beginPath(); ctx.arc(p.x, p.y, 10, 0, 7); ctx.fill();
   ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p.x, p.y, 3.5, 0, 7); ctx.fill();
-  if (!reducedMotion) redraw();   // titik berdenyut: lanjutkan animasi (hanya menyalin lapisan statis)
+  if (!reducedMotion && !idle) redraw();   // titik berdenyut: lanjutkan animasi (hanya menyalin lapisan statis)
 }
 let rainbowGrad = null;   // dibuat sekali, dipakai ulang setiap gambar
 function rainbow(){
@@ -289,14 +295,15 @@ function strokeDone(){
   T.finished = true; T.si = T.strokes.length - 1;
   const i = info(T.ch);
   done[T.ch] = 1; save('done', done);
-  count++; save('count', count);
+  pending.add(T.ch); save('pending', [...pending]);
   $('#say').textContent = i.label;
   $('#nextBtn').classList.add('ready');
   sWin();
   const r = pad.getBoundingClientRect();
   burst(r.left + r.width / 2, r.top + r.height / 2, 70);
   say(`hebat-${T.ch}`, i.done);
-  if (count % PER_STAR === 0) {
+  if (pending.size >= PER_STAR) {
+    pending.clear(); save('pending', []);
     stars++; save('stars', stars);
     toast('⭐ +1 bintang!');
   }
@@ -315,13 +322,15 @@ pad.addEventListener('pointermove', e => {
   const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
   for (const ev of (evs.length ? evs : [e])) follow(toBox(ev));
 });
-// Angkat jari di dekat ujung goresan (sisa paling banyak 20 satuan) juga dihitung selesai.
+// Angkat jari di dekat ujung goresan juga dihitung selesai: sisa paling banyak 20 satuan
+// DAN paling banyak 25% panjang goresan (supaya goresan pendek tidak selesai setengah jalan).
 const lift = e => {
   if (e.pointerId !== pointer) return;
   pointer = null;
   if (!T || T.finished) return;
   const st = T.strokes[T.si];
-  if (!st.dot && T.k > 0 && (st.pts.length - 1 - T.k) * STEP <= 20) strokeDone();
+  const left = st.pts.length - 1 - T.k;
+  if (!st.dot && T.k > 0 && left * STEP <= 20 && left <= (st.pts.length - 1) * .25) strokeDone();
 };
 // Didengarkan di window: tetap tertangkap walau jari/mouse dilepas di luar papan atau capture gagal.
 // pointercancel (gestur sistem, notifikasi) hanya melepas kunci; progres tidak dihitung selesai.

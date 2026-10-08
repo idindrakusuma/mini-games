@@ -79,15 +79,25 @@ const esc = {
   json: s => JSON.stringify(s).slice(1, -1),
   js: s => s.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/`/g, '\\`').replace(/\$\{/g, '\\${'),
 };
+// Di dalam <script type="application/ld+json"> entitas HTML tidak di-decode: isinya harus di-escape
+// sebagai JSON (dan "<" diganti \u003c supaya tidak bisa menutup tag script).
+const jsonLd = v => JSON.stringify(v).slice(1, -1).replace(/</g, '\\u003c');
 function fill(text, file) {
+  if (file.endsWith('.html')) {
+    return text.replace(/(<script type="application\/ld\+json">)([\s\S]*?)(<\/script>)/g, (m, open, body, close) =>
+      open + body.replace(/\{\{([A-Z_]+)\}\}/g, (mm, k) => { if (!(k in V)) fail(`placeholder tidak dikenal ${mm} di ${file}`); return jsonLd(V[k]); }) + close)
+      .replace(/\{\{([A-Z_]+)\}\}/g, m => fillOne(m, file));
+  }
+  return text.replace(/\{\{([A-Z_]+)\}\}/g, m => fillOne(m, file));
+}
+function fillOne(m, file) {
+  const k = m.slice(2, -2);
   const kind = file.endsWith('.webmanifest') ? 'json' : file.endsWith('.js') || file.endsWith('.mjs') ? 'js' : 'html';
   const vals = { ...V, OG_TITLE_HTML: ogLines.map(esc.html).join('<br>') };
-  return text.replace(/\{\{([A-Z_]+)\}\}/g, (m, k) => {
-    if (!(k in vals)) fail(`placeholder tidak dikenal ${m} di ${file}`);
-    if (k === 'OG_TITLE_HTML') return kind === 'js' ? esc.js(vals[k]) : vals[k];
-    // .mjs generator menaruh nilai di dalam HTML di dalam template literal JS
-    return kind === 'json' ? esc.json(vals[k]) : kind === 'js' ? esc.js(file.endsWith('.mjs') ? esc.html(vals[k]) : vals[k]) : esc.html(vals[k]);
-  });
+  if (!(k in vals)) fail(`placeholder tidak dikenal ${m} di ${file}`);
+  if (k === 'OG_TITLE_HTML') return kind === 'js' ? esc.js(vals[k]) : vals[k];
+  // .mjs generator menaruh nilai di dalam HTML di dalam template literal JS
+  return kind === 'json' ? esc.json(vals[k]) : kind === 'js' ? esc.js(file.endsWith('.mjs') ? esc.html(vals[k]) : vals[k]) : esc.html(vals[k]);
 }
 
 // ---------- 1. salin template ----------

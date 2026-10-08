@@ -88,6 +88,8 @@ showStars();
 const LEVELS = { tebak: [2, 3, 4], urut: [3, 4, 5] };
 const progress = load('level', {});   // { 'huruf-tebak': { lv, streak }, ... }
 const prog = key => (progress[key] ||= { lv: 0, streak: 0 });
+// Level dari localStorage bisa rusak atau lebih besar dari daftar level: batasi ke rentang yang ada.
+const levelOf = (key, game) => { const lv = Math.trunc(prog(key).lv) || 0; return Math.max(0, Math.min(LEVELS[game].length - 1, lv)); };
 function adapt(key, game, mistakes){
   const p = prog(key), max = LEVELS[game].length - 1;
   if (mistakes <= 1) { if (++p.streak >= 2 && p.lv < max) { p.lv++; p.streak = 0; } }
@@ -170,7 +172,7 @@ const kenal = load('kenal', {});
 
 function start(set, game){
   const key = `${set}-${game}`, items = SETS[set];
-  const n = game === 'kenal' ? 1 : LEVELS[game][prog(key).lv];
+  const n = game === 'kenal' ? 1 : LEVELS[game][levelOf(key, game)];
   S = { set, game, key, n, q: 0, mistakes: 0, items };
   if (game === 'kenal') {
     const from = (kenal[set] || 0) % items.length;
@@ -190,6 +192,26 @@ function dots(){
   $('#dots').innerHTML = Array.from({ length: ROUND }, (_, i) => `<i class="${i < S.q ? 'done' : i === S.q ? 'now' : ''}"></i>`).join('');
 }
 
+// Ukuran kartu (dan slot) dari ruang yang tersedia: tinggi papan dikurangi teks soal,
+// jarak antarbaris (22px) dan padding. Dipanggil saat soal dibuat dan saat ukuran papan berubah.
+function sizes(){
+  const board = $('.board'), cs = getComputedStyle(board);
+  const W = Math.min(board.clientWidth - 32, 640);
+  let H = board.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - askEl.offsetHeight - 22;
+  if (S.game === 'kenal') return { size: layout(1, W, H - 84 - 22, 260) };
+  if (S.game === 'tebak') return { size: layout(S.n, W, H, 180) };
+  const slotSize = Math.floor(Math.min(110, (W - (S.n - 1) * 10) / S.n, H * .22 * 3 / 4));
+  H -= slotSize * 4 / 3 + 22;
+  return { size: layout(S.n, W, H, 160), slotSize };
+}
+// Rotasi layar / bilah alamat menyusut: ukur ulang kartu yang sedang tampil tanpa mengganti soal.
+new ResizeObserver(() => {
+  if (!S || !play.classList.contains('on')) return;
+  const { size, slotSize } = sizes();
+  cardsEl.querySelectorAll('.card').forEach(c => c.style.setProperty('--size', size + 'px'));
+  if (slotSize) slotsEl.querySelectorAll('.slot').forEach(s => s.style.setProperty('--size', slotSize + 'px'));
+}).observe($('.board'));
+
 function question(){
   clearTimeout(timer); dots();
   cardsEl.innerHTML = ''; slotsEl.innerHTML = ''; S.locked = false; S.wrong = 0;
@@ -197,22 +219,17 @@ function question(){
   askEl.textContent = S.game === 'kenal' ? S.targets[S.q].label
     : S.game === 'tebak' ? `🔊 Mana ${NOUN[S.set]}nya?`
     : S.set === 'angka' ? 'Urutkan dari yang terkecil!' : 'Urutkan dari yang pertama!';
-  // Ruang untuk kartu = tinggi papan dikurangi teks soal, jarak antarbaris (22px), dan padding.
-  const board = $('.board'), cs = getComputedStyle(board);
-  const W = Math.min(board.clientWidth - 32, 640);
-  let H = board.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - askEl.offsetHeight - 22;
+  const { size, slotSize } = sizes();
   if (S.game === 'kenal') {
     const item = S.targets[S.q];
-    const size = layout(1, W, H - 84 - 22, 260);
     const c = makeCard(item); c.style.setProperty('--size', size + 'px'); c.classList.add('show');
-    c.addEventListener('click', () => { if (swiped) { swiped = false; return; } ask(); });
+    c.addEventListener('click', () => { if (swiped) { swiped = false; return; } if (!S.locked) ask(); });
     cardsEl.append(c);
     $('#prevBtn').disabled = S.q === 0;
   } else if (S.game === 'tebak') {
     const target = S.targets[S.q];
     const others = sample(S.items.filter(i => i !== target), S.n - 1);
     S.target = target; S.choices = shuffle([target, ...others]);
-    const size = layout(S.n, W, H, 180);
     for (const item of S.choices) {
       const c = makeCard(item); c.style.setProperty('--size', size + 'px');
       c.addEventListener('click', () => tapGuess(c, item));
@@ -222,9 +239,6 @@ function question(){
     const seq = S.items.slice(S.targets[S.q], S.targets[S.q] + S.n);
     let order; do { order = shuffle(seq); } while (order.every((x, i) => x === seq[i]));
     S.seq = seq; S.step = 0;
-    const slotSize = Math.floor(Math.min(110, (W - (S.n - 1) * 10) / S.n, H * .22 * 3 / 4));
-    H -= slotSize * 4 / 3 + 22;
-    const size = layout(S.n, W, H, 160);
     for (let i = 0; i < S.n; i++) { const s = document.createElement('div'); s.className = 'slot'; s.style.setProperty('--size', slotSize + 'px'); slotsEl.append(s); }
     for (const item of order) {
       const c = makeCard(item); c.style.setProperty('--size', size + 'px');
@@ -326,7 +340,9 @@ $('#nextBtn').addEventListener('click', () => step(1));
 // Penanda dibersihkan di tugas berikutnya, jadi ketukan/Enter sesudahnya tetap membacakan kartu.
 // Hanya jari yang memulai geseran yang dihitung (#cards memakai touch-action: pan-y).
 let sx = null, sid = null, swiped = false;
-cardsEl.addEventListener('pointerdown', e => { if (sid !== null) return; sx = e.clientX; sid = e.pointerId; swiped = false; });
+// Jari pertama (pointer utama) selalu memulai geseran baru, jadi pelacakan tidak bisa macet
+// kalau pointerup sebelumnya hilang (misalnya dilepas di luar jendela). Jari tambahan diabaikan.
+cardsEl.addEventListener('pointerdown', e => { if (sid !== null && !e.isPrimary) return; sx = e.clientX; sid = e.pointerId; swiped = false; });
 // pointerup/pointercancel didengarkan di window: jari bisa dilepas di luar kartu.
 addEventListener('pointerup', e => {
   if (e.pointerId !== sid) return; const dx = e.clientX - sx; sx = sid = null;
