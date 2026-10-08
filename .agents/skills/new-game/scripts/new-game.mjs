@@ -36,25 +36,27 @@ const ACCENTS = {
 const FLAGS = { slug: true, name: true, emoji: true, tagline: true, description: true,
                 accent: false, keywords: false, 'title-suffix': false, 'short-name': false };
 const args = Object.create(null);
+const fail = msg => { console.error('✗ ' + msg); process.exit(1); };
+const KNOWN = Object.keys(FLAGS);
 for (let i = 2; i < process.argv.length; i++) {
   const a = process.argv[i];
   // Argumen tanpa flag biasanya nilai multi-kata yang lupa diberi tanda kutip (--name Tebak Hewan).
-  if (!a.startsWith('--')) { console.error(`✗ argumen "${a}" tidak punya flag; nilai yang mengandung spasi perlu diberi tanda kutip`); process.exit(1); }
+  if (!a.startsWith('--')) fail(`argumen "${a}" tidak punya flag; nilai yang mengandung spasi perlu diberi tanda kutip`);
   let k, v;
-  if (a.includes('=')) [k, v] = [a.slice(2, a.indexOf('=')), a.slice(a.indexOf('=') + 1)];
+  k = a.includes('=') ? a.slice(2, a.indexOf('=')) : a.slice(2);
+  // Flag salah ketik (mis. --title_suffix, --help) ditolak, supaya tidak diam-diam memakai nilai default.
+  if (!KNOWN.includes(k)) fail(`flag tidak dikenal: --${k} (yang tersedia: ${KNOWN.map(x => '--' + x).join(', ')})`);
+  if (a.includes('=')) v = a.slice(a.indexOf('=') + 1);
   else {
-    k = a.slice(2); v = process.argv[i + 1];
+    v = process.argv[i + 1];
     // "--flag" tanpa nilai: jangan ambil flag berikutnya sebagai nilainya
-    if (v === undefined || v.startsWith('--')) { console.error(`✗ --${k} butuh nilai`); process.exit(1); }
+    if (v === undefined || v.startsWith('--')) fail(`--${k} butuh nilai`);
     i++;
   }
-  args[k] = v;
+  // Nilai kosong (mis. --accent= dari variabel shell yang kosong) juga ditolak, bukan diam-diam default.
+  if (!v.trim()) fail(`--${k} tidak boleh kosong`);
+  args[k] = v.trim();
 }
-const fail = msg => { console.error('✗ ' + msg); process.exit(1); };
-// Flag salah ketik (mis. --title_suffix) ditolak, supaya tidak diam-diam memakai nilai default.
-const KNOWN = Object.keys(FLAGS);
-for (const k of Object.keys(args)) if (!KNOWN.includes(k)) fail(`flag tidak dikenal: --${k} (yang tersedia: ${KNOWN.map(x => '--' + x).join(', ')})`);
-for (const k of Object.keys(args)) args[k] = args[k].trim();
 for (const k of KNOWN) if (FLAGS[k] && !args[k]) fail(`--${k} wajib diisi`);
 const slug = args.slug;
 if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)) fail('--slug harus kebab-case, contoh: tebak-hewan');

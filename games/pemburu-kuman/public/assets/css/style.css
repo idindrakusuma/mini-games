@@ -34,6 +34,7 @@ h1{
   color:var(--text); letter-spacing:-.01em;
   text-shadow:0 4px 0 rgba(255,255,255,.65);
 }
+@media (prefers-color-scheme: dark){ h1{ text-shadow:0 4px 0 rgba(0,0,0,.25); } }
 .lead{ font-size:1.2rem; line-height:1.35; color:var(--muted); max-width:22em; margin:0 0 22px; font-weight:500; }
 .choices{ display:grid; grid-template-columns:1fr 1fr; gap:14px; width:100%; max-width:440px; }
 .choice{
@@ -62,7 +63,7 @@ h1{
 #video{ position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
 .hud{
   position:absolute; left:0; right:0; top:0; display:flex; align-items:center; justify-content:space-between; gap:10px;
-  padding:calc(env(safe-area-inset-top,0px) + 12px) 14px 0;
+  padding:calc(env(safe-area-inset-top,0px) + 12px) calc(env(safe-area-inset-right,0px) + 14px) 0 calc(env(safe-area-inset-left,0px) + 14px);
   pointer-events:none;
 }
 .hud > *{ pointer-events:auto; }

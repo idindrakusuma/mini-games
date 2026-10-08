@@ -225,8 +225,8 @@ function dots(){
   // Untuk pembaca layar: progres sebagai progressbar ("2 dari 5").
   const dotsEl = $('#dots'), total = S.targets.length, finished = S.q >= total, now = Math.min(S.q + 1, total);
   const unit = S.game === 'kenal' ? 'Kartu' : 'Soal';
-  dotsEl.setAttribute('aria-valuemin', 0); dotsEl.setAttribute('aria-valuemax', total);
-  dotsEl.setAttribute('aria-valuenow', finished ? total : S.q);
+  dotsEl.setAttribute('aria-valuemin', 1); dotsEl.setAttribute('aria-valuemax', total);
+  dotsEl.setAttribute('aria-valuenow', now);   // sama dengan teks "N dari M"
   dotsEl.setAttribute('aria-valuetext', finished ? 'Selesai' : `${unit} ${now} dari ${total}`);
   dotsEl.innerHTML = Array.from({ length: S.targets.length }, (_, i) => `<i class="${i < S.q ? 'done' : i === S.q ? 'now' : ''}"></i>`).join('');
 }
@@ -246,16 +246,18 @@ function sizes(){
   return { size: layout(S.n, W, H, 160), slotSize };
 }
 // Rotasi layar / bilah alamat menyusut: ukur ulang kartu yang sedang tampil tanpa mengganti soal.
+let lastFit = '';
 function refit(){
   if (!S || !play.classList.contains('on')) return;
   const { size, slotSize } = sizes();
+  // Ukuran sama → jangan tulis ulang (mencegah loop ResizeObserver).
+  const key = size + '/' + slotSize; if (key === lastFit) return; lastFit = key;
   cardsEl.querySelectorAll('.card').forEach(c => c.style.setProperty('--size', size + 'px'));
   if (slotSize) slotsEl.querySelectorAll('.slot').forEach(s => s.style.setProperty('--size', slotSize + 'px'));
 }
 // Ukur ulang saat papan berubah ukuran ATAU teks soal berganti tinggi (jawaban panjang, font termuat, zoom teks).
 const fitObserver = new ResizeObserver(refit);
 fitObserver.observe($('.board')); fitObserver.observe(askEl);
-// Font Baloo 2 dimuat belakangan (display=swap) dan bisa membuat teks soal berganti baris: ukur ulang.
 
 function question(){
   clearTimeout(timer); dots();
@@ -266,7 +268,7 @@ function question(){
   askEl.textContent = S.game === 'kenal' ? S.targets[S.q].label
     : S.game === 'tebak' ? `🔊 Mana ${S.set}nya?`
     : S.set === 'angka' ? 'Urutkan dari yang terkecil!' : 'Urutkan dari yang pertama!';
-  const { size, slotSize } = sizes();
+  const { size, slotSize } = sizes(); lastFit = size + '/' + slotSize;
   if (S.game === 'kenal') {
     const item = S.targets[S.q];
     const c = makeCard(item); c.style.setProperty('--size', size + 'px'); c.classList.add('show');

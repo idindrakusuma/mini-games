@@ -390,7 +390,7 @@ pad.addEventListener('pointerdown', e => {
   // Pointer utama baru boleh mengambil alih kunci (supaya tidak macet kalau pointerup hilang),
   // tapi sentuhan tidak boleh merebut dari pena (telapak tangan saat menulis dengan stylus).
   // Pena yang masih menempel (walau diam) tetap memegang kunci; kunci pena dilepas begitu pena
-  // terdeteksi terangkat (lihat pointermove/pointerleave di bawah), bukan dengan timer.
+  // terdeteksi terangkat (lihat pointermove & lostpointercapture di bawah), bukan dengan timer.
   if (pointer !== null && (!e.isPrimary || (pointerType === 'pen' && e.pointerType !== 'pen'))) return;
   pointerType = e.pointerType;
   pointer = e.pointerId; T.onTrack = false; T.needLift = false; wake();
@@ -400,9 +400,9 @@ pad.addEventListener('pointerdown', e => {
 // Pointerup pena bisa hilang. Pena yang melayang tanpa menekan (buttons === 0) atau keluar dari papan
 // berarti sudah terangkat: lepaskan kuncinya supaya jari bisa menulis lagi.
 // Diperlakukan seperti pointerup lewat lift(), jadi aturan "angkat dekat ujung = selesai" tetap berlaku.
-// Ujung pena dianggap terangkat kalau bit tombol utama (tip) tidak aktif, walau tombol samping ditekan.
-const penLifted = e => e.pointerType === 'pen' && e.pointerId === pointer && !(e.buttons & 1);
-pad.addEventListener('pointerleave', e => { if (penLifted(e)) lift(e); });
+// Ujung pena dianggap terangkat kalau bit tombol utama (tip) tidak aktif DAN tekanannya 0 (beberapa
+// driver mengirim buttons=0 saat pena masih menempel, tapi tetap dengan tekanan > 0).
+const penLifted = e => e.pointerType === 'pen' && e.pointerId === pointer && !(e.buttons & 1) && !e.pressure;
 pad.addEventListener('pointermove', e => {
   if (penLifted(e)) { lift(e); return; }
   if (e.pointerId !== pointer) return;
@@ -425,7 +425,7 @@ const lift = e => {
 addEventListener('pointerup', lift);
 addEventListener('pointercancel', e => { if (e.pointerId === pointer) pointer = null; });
 // Kalau browser melepas capture tanpa pointerup (misalnya gestur sistem), lepaskan kunci satu jari.
-pad.addEventListener('lostpointercapture', e => { if (e.pointerId === pointer) pointer = null; });
+pad.addEventListener('lostpointercapture', e => { if (e.pointerId === pointer) lift(e); });   // aturan "dekat ujung" tetap berlaku
 
 /* ---------- Konfeti & toast ---------- */
 const fx = $('#fx'), fctx = fx.getContext('2d');
