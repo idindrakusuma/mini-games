@@ -141,6 +141,13 @@ function resize(){
 // Ukur ulang setiap kali ukuran papan berubah (rotasi layar, teks di atasnya berganti baris, font termuat).
 // Gambar langsung (bukan di frame berikutnya) supaya papan tidak berkedip kosong.
 new ResizeObserver(() => { if (T) { resize(); drawNow(); } }).observe(pad);
+// Zoom browser / pindah ke layar lain mengubah devicePixelRatio tanpa mengubah ukuran CSS.
+(function watchDpr(){
+  matchMedia(`(resolution: ${devicePixelRatio}dppx)`).addEventListener?.('change', () => {
+    if (T) { resize(); drawNow(); }
+    watchDpr();
+  }, { once: true });
+})();
 
 // Mode gelap: ikuti data-theme kalau ada, kalau tidak ikuti pengaturan perangkat (sama seperti CSS).
 const darkMQ = matchMedia('(prefers-color-scheme: dark)');
@@ -177,9 +184,18 @@ function nextChar(){
 // ada perubahan. Tiap frame animasi cukup menyalin lapisan itu lalu menggambar titik hijau.
 const bg = document.createElement('canvas'), bctx = bg.getContext('2d');
 let lastInput = performance.now();
-pad.addEventListener('pointerdown', () => { lastInput = performance.now(); redraw(); });
 let dirty = true;
 function invalidate(){ dirty = true; redraw(); }
+// Ada sentuhan/gerakan: catat waktunya dan nyalakan lagi denyut titik hijau kalau sempat berhenti.
+function wake(){ lastInput = performance.now(); redraw(); }
+// Tinta baru saja (dari titik a ke b) langsung ke lapisan statis, tanpa menggambar ulang semuanya.
+function inkSegment(st, a, b){
+  if (dirty) return redraw();   // gambar ulang penuh sudah dijadwalkan dan akan mencakup tinta ini
+  const c = bctx; c.strokeStyle = (colors ||= readColors()).accent; c.lineWidth = 15;
+  c.beginPath(); c.moveTo(st.pts[a].x, st.pts[a].y);
+  for (let j = a + 1; j <= b; j++) c.lineTo(st.pts[j].x, st.pts[j].y);
+  c.stroke(); redraw();
+}
 
 function paintStatic(){
   const { s, dpr, ox, oy } = view, c = bctx;
@@ -225,7 +241,10 @@ function paintStatic(){
   if (!T.finished && !st.dot) {
     c.strokeStyle = dark ? 'rgba(255,255,255,.55)' : 'rgba(123,74,214,.55)'; c.lineWidth = 3.2;
     const gap = Math.round(22 / STEP);
-    for (let j = T.k + gap; j < st.pts.length - 2; j += gap) {
+    // Posisi panah tetap di sepanjang goresan (bukan relatif ke pensil), jadi tinta bertahap
+    // dan gambar ulang penuh menghasilkan gambar yang sama.
+    for (let j = gap; j < st.pts.length - 2; j += gap) {
+      if (j <= T.k) continue;
       const a = st.pts[j - 2], b = st.pts[Math.min(j + 2, st.pts.length - 1)], m = st.pts[j];
       const ang = Math.atan2(b.y - a.y, b.x - a.x);
       c.beginPath();
@@ -288,7 +307,7 @@ function follow(q){
   const tip = st.pts[T.k];
   if (best < 0 || (!T.onTrack && Math.hypot(q.x - tip.x, q.y - tip.y) > TOL)) { T.onTrack = false; return; }
   T.onTrack = true;
-  if (best > T.k) { T.k = best; sTick(); invalidate(); }
+  if (best > T.k) { const from = T.k; T.k = best; sTick(); inkSegment(st, from, best); }
   if (T.k >= st.pts.length - 1 - Math.round(8 / STEP)) strokeDone();
 }
 function strokeDone(){
@@ -316,12 +335,13 @@ function strokeDone(){
 let pointer = null;
 pad.addEventListener('pointerdown', e => {
   if (!T || pointer !== null) return;
-  pointer = e.pointerId; T.onTrack = false;
+  pointer = e.pointerId; T.onTrack = false; wake();
   try { pad.setPointerCapture(e.pointerId); } catch (err) { /* pointer sudah tidak aktif: abaikan */ }
   follow(toBox(e));
 });
 pad.addEventListener('pointermove', e => {
   if (e.pointerId !== pointer) return;
+  wake();
   const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e], r = pad.getBoundingClientRect();   // ukur sekali per event
   for (const ev of (evs.length ? evs : [e])) follow(toBox(ev, r));
 });

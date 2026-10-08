@@ -34,7 +34,14 @@ const args = {};
 for (let i = 2; i < process.argv.length; i++) {
   const a = process.argv[i];
   if (!a.startsWith('--')) continue;
-  const [k, v] = a.includes('=') ? [a.slice(2, a.indexOf('=')), a.slice(a.indexOf('=') + 1)] : [a.slice(2), process.argv[++i]];
+  let k, v;
+  if (a.includes('=')) [k, v] = [a.slice(2, a.indexOf('=')), a.slice(a.indexOf('=') + 1)];
+  else {
+    k = a.slice(2); v = process.argv[i + 1];
+    // "--flag" tanpa nilai: jangan ambil flag berikutnya sebagai nilainya
+    if (v === undefined || v.startsWith('--')) { console.error(`✗ --${k} butuh nilai`); process.exit(1); }
+    i++;
+  }
   args[k] = v;
 }
 const fail = msg => { console.error('✗ ' + msg); process.exit(1); };
@@ -100,19 +107,18 @@ function fillOne(m, file) {
   return kind === 'json' ? esc.json(vals[k]) : kind === 'js' ? esc.js(file.endsWith('.mjs') ? esc.html(vals[k]) : vals[k]) : esc.html(vals[k]);
 }
 
-// ---------- 1. salin template ----------
-const written = [];
-(function copy(src, dest) {
-  fs.mkdirSync(dest, { recursive: true });
+// ---------- 1. siapkan semua isi di memori dulu ----------
+// Template diisi dan landing page dicek SEBELUM ada file yang ditulis, jadi kalau gagal
+// tidak ada folder setengah jadi yang memblokir percobaan berikutnya.
+const files = [];
+(function collect(src, dest) {
   for (const e of fs.readdirSync(src, { withFileTypes: true })) {
     const s = path.join(src, e.name), d = path.join(dest, e.name);
-    if (e.isDirectory()) copy(s, d);
-    else { fs.writeFileSync(d, fill(fs.readFileSync(s, 'utf8'), s)); written.push(path.relative(root, d)); }
+    if (e.isDirectory()) collect(s, d);
+    else files.push([d, fill(fs.readFileSync(s, 'utf8'), s)]);
   }
 })(templateDir, gameDir);
-for (const d of ['public/assets/icons', 'public/assets/images']) fs.mkdirSync(path.join(gameDir, d), { recursive: true });
 
-// ---------- 2. kartu di landing page ----------
 const landingPath = path.join(root, 'games/landing-page/public/index.html');
 let landing = fs.readFileSync(landingPath, 'utf8');
 const card = `    <li>
@@ -129,6 +135,11 @@ const soon = /    <li>\n      <div class="card soon"[\s\S]*?<\/li>\n/;
 if (soon.test(landing)) landing = landing.replace(soon, () => card);
 else if (landing.includes('  </ul>')) landing = landing.replace('  </ul>', () => card + '  </ul>');
 else fail('tidak menemukan daftar game di landing page');
+
+// ---------- 2. tulis folder game & kartu landing page ----------
+for (const [d, text] of files) { fs.mkdirSync(path.dirname(d), { recursive: true }); fs.writeFileSync(d, text); }
+for (const d of ['public/assets/icons', 'public/assets/images']) fs.mkdirSync(path.join(gameDir, d), { recursive: true });
+const written = files.map(([d]) => path.relative(root, d));
 fs.writeFileSync(landingPath, landing);
 
 // ---------- 3. sitemap ----------

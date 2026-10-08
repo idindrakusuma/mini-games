@@ -9,8 +9,9 @@ const FONT = '"Baloo 2","Trebuchet MS",system-ui,sans-serif';
 const STORE = '{{STORE}}';   // prefix localStorage, wajib unik per game
 
 /* ---------- Stars (per device) ---------- */
+// Isi localStorage bisa rusak/beda bentuk: hanya terima bilangan bulat >= 0.
 let stars = 0;
-try { stars = parseInt(localStorage.getItem(STORE + '.stars') || '0', 10) || 0; } catch(e) {}
+try { const v = JSON.parse(localStorage.getItem(STORE + '.stars') || '0'); stars = Number.isInteger(v) && v >= 0 ? v : 0; } catch(e) {}
 function saveStars(){ try { localStorage.setItem(STORE + '.stars', String(stars)); } catch(e) {} }
 function showStars(){ $('#starsHome').textContent = `⭐ ${stars} bintang`; }
 showStars();

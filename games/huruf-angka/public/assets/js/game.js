@@ -33,7 +33,6 @@ const NUMBERS = NUM_WORDS.map((w, i) => ({
   reveal: `${w[0].toUpperCase() + w.slice(1)}!`, label: `${i + 1}, ${w}!`,
 }));
 const SETS = { huruf: LETTERS, angka: NUMBERS };
-const NOUN = { huruf: 'huruf', angka: 'angka' };
 
 /* ---------- Suara ----------
    Semua ucapan lewat say(key, teks). Untuk memakai rekaman suara asli nanti,
@@ -177,7 +176,7 @@ const later = (fn, ms) => { clearTimeout(timer); timer = setTimeout(fn, ms); };
 
 // Kenalan: 5 kartu berurutan per sesi, lanjut dari posisi terakhir (A–E, F–J, ...).
 const kenal = loadObj('kenal');
-const kenalPos = set => { const v = Math.trunc(kenal[set]); return v >= 0 ? v : 0; };
+const kenalPos = set => { const v = Math.trunc(kenal[set]); return Number.isFinite(v) && v >= 0 ? v : 0; };
 
 function start(set, game){
   const key = `${set}-${game}`, items = SETS[set];
@@ -227,7 +226,7 @@ function question(){
   cardsEl.innerHTML = ''; slotsEl.innerHTML = ''; S.locked = false; S.wrong = 0;
   $('#nav').hidden = S.game !== 'kenal';
   askEl.textContent = S.game === 'kenal' ? S.targets[S.q].label
-    : S.game === 'tebak' ? `🔊 Mana ${NOUN[S.set]}nya?`
+    : S.game === 'tebak' ? `🔊 Mana ${S.set}nya?`
     : S.set === 'angka' ? 'Urutkan dari yang terkecil!' : 'Urutkan dari yang pertama!';
   const { size, slotSize } = sizes();
   if (S.game === 'kenal') {
@@ -261,7 +260,7 @@ function question(){
 
 function ask(){
   if (S.game === 'kenal') { const it = S.targets[S.q]; say(`benar-${S.set}-${it.glyph}`, it.reveal); }
-  else if (S.game === 'tebak') say(`mana-${S.set}-${S.target.glyph}`, `Mana ${NOUN[S.set]} ${S.target.say}?`);
+  else if (S.game === 'tebak') say(`mana-${S.set}-${S.target.glyph}`, `Mana ${S.set} ${S.target.say}?`);
   else say('urutkan', S.set === 'angka' ? 'Urutkan angkanya, dari yang paling kecil!' : 'Urutkan hurufnya, dari yang pertama!');
 }
 
@@ -293,6 +292,8 @@ function tapOrder(card, item){
   if (S.locked || card.classList.contains('used')) return;
   const want = S.seq[S.step];
   if (item !== want) {
+    if (card.dataset.missedAt === String(S.step)) return;   // ketukan ganda pada kartu salah dihitung sekali
+    card.dataset.missedAt = S.step;
     miss(card, [...cardsEl.children].find(c => c.querySelector('.glyph').textContent === want.glyph));
     return;
   }
