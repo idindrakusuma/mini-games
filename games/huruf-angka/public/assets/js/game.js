@@ -225,10 +225,10 @@ function dots(){
   // Untuk pembaca layar: progres sebagai progressbar ("2 dari 5").
   const dotsEl = $('#dots'), total = S.targets.length, finished = S.q >= total, now = Math.min(S.q + 1, total);
   const unit = S.game === 'kenal' ? 'Kartu' : 'Soal';
-  dotsEl.setAttribute('aria-valuemin', 1); dotsEl.setAttribute('aria-valuemax', total);
+  dotsEl.setAttribute('aria-valuemax', total);   // aria-valuemin=1 ada di index.html
   dotsEl.setAttribute('aria-valuenow', now);   // sama dengan teks "N dari M"
   dotsEl.setAttribute('aria-valuetext', finished ? 'Selesai' : `${unit} ${now} dari ${total}`);
-  dotsEl.innerHTML = Array.from({ length: S.targets.length }, (_, i) => `<i class="${i < S.q ? 'done' : i === S.q ? 'now' : ''}"></i>`).join('');
+  dotsEl.innerHTML = Array.from({ length: total }, (_, i) => `<i class="${i < S.q ? 'done' : i === S.q ? 'now' : ''}"></i>`).join('');
 }
 
 // Ukuran kartu (dan slot) dari ruang yang tersedia: tinggi papan dikurangi teks soal,
@@ -380,7 +380,7 @@ function next(){
 }
 
 function stop(){
-  clearTimeout(timer); hush(); fxReset(); S = null;
+  clearTimeout(timer); hush(); fxReset(); S = null; lastFit = '';   // ukuran dihitung ulang penuh di ronde berikutnya
   play.classList.remove('on'); sheet(false); $('#menu').inert = false;
   showStars();
   document.querySelector(`#menu .mode[data-game="${lastGame}"]`)?.focus({ preventScroll: true });   // kembali ke tombol asal

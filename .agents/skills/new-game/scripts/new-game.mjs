@@ -5,6 +5,8 @@
 //     --tagline "Dengar suaranya, tebak hewannya!" \
 //     --description "Game tebak suara hewan untuk anak. ..." \
 //     [--keywords "game anak, hewan, suara"] [--title-suffix "Game Tebak Suara Hewan untuk Anak"]
+//     [--short-name "Tebak Hewan"]   (label di bawah ikon PWA, maks. 12 huruf)
+//   Nilai yang diawali "--" tulis dengan bentuk --flag=nilai. Flag yang sama tidak boleh diulang.
 //
 // Yang dibuat/diubah:
 //   games/<slug>/                       folder game dari template (SEO, PWA, game placeholder, generator gambar)
@@ -45,6 +47,7 @@ for (let i = 2; i < process.argv.length; i++) {
   let k, v;
   k = a.includes('=') ? a.slice(2, a.indexOf('=')) : a.slice(2);
   // Flag salah ketik (mis. --title_suffix, --help) ditolak, supaya tidak diam-diam memakai nilai default.
+  if (k in args) fail(`--${k} diberikan lebih dari sekali`);
   if (!KNOWN.includes(k)) fail(`flag tidak dikenal: --${k} (yang tersedia: ${KNOWN.map(x => '--' + x).join(', ')})`);
   if (a.includes('=')) v = a.slice(a.indexOf('=') + 1);
   else {

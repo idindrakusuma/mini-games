@@ -30,8 +30,11 @@ node .agents/skills/new-game/scripts/new-game.mjs \
   --tagline "Dengar suaranya, tebak hewannya!" \
   --description "Game tebak suara hewan untuk anak. Gratis, langsung main di browser tanpa install." \
   --keywords "game anak, tebak hewan, suara hewan, game edukasi" \
-  --title-suffix "Game Tebak Suara Hewan untuk Anak"
+  --title-suffix "Game Tebak Suara Hewan untuk Anak" \
+  --short-name "Tebak Hewan"
 ```
+
+`--short-name` (opsional) adalah label di bawah ikon saat game dipasang ke layar utama, maksimal 12 huruf. Nilai yang diawali `--` ditulis dengan bentuk `--flag=nilai`.
 
 Script ini otomatis mengerjakan:
 - Membuat `games/<slug>/`: `public/index.html` (SEO lengkap: title, description, canonical, Open Graph, Twitter, JSON-LD), `site.webmanifest` (scope `./`), CSS, `game.js` placeholder yang sudah bisa dimainkan, `scripts/generate-images.mjs`, dan `README.md`.
