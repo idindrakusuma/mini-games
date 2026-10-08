@@ -26,7 +26,7 @@ Tunjukkan tangan ke kamera, lalu kuman muncul menempel di kulit. Gosok-gosok tan
 ### 🦷 Mode Gigi
 Buka mulut dan senyum lebar ke kamera, lalu kuman muncul di gigi. Sikat gigi sampai 5 kuman kabur. Posisi mulut dicari dengan model [MediaPipe Face Landmarker](https://ai.google.dev/edge/mediapipe/solutions/vision/face_landmarker) (gratis, Apache 2.0) yang disimpan di repo ini dan jalan di perangkat, jadi kuman benar-benar menempel di gigi dan ikut bergerak bersama mulut. Kalau model tidak bisa dimuat, game kembali ke deteksi warna.
 
-Ada juga tombol **✨ Sudah bersih** untuk ayah dan bunda. Kalau anak sudah selesai sikat gigi, tekan tombol ini: semua kuman langsung kabur, gigi berkilau dengan bunyi "cling cling", lalu anak mendapat bintang.
+Ada juga tombol **✨** (sudah bersih) di pojok kanan atas untuk ayah dan bunda. Kalau anak sudah selesai sikat gigi, tekan tombol ini: semua kuman langsung kabur, gigi berkilau dengan bunyi "cling cling", lalu anak mendapat bintang.
 
 ### 🦠 Kuman yang hidup
 - Kuman bergoyang, berkedip, dan matanya melirik ke sana kemari.

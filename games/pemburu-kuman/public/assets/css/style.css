@@ -67,6 +67,8 @@ h1{
   pointer-events:none;
 }
 .hud > *{ pointer-events:auto; }
+.hud-right{ display:flex; gap:10px; pointer-events:none; }
+.hud-right > *{ pointer-events:auto; }
 .round{
   width:56px; height:56px; border-radius:50%; border:0; background:var(--card); color:var(--text);
   font-size:1.7rem; box-shadow:0 4px 0 rgba(0,0,0,.2); display:grid; place-items:center;
@@ -87,14 +89,10 @@ h1{
 .tip:empty{ display:none; }
 
 /* Tombol untuk orang tua: menandai gigi sudah bersih */
-.shine{
-  position:absolute; right:14px; top:calc(env(safe-area-inset-top,0px) + 82px);
-  min-height:56px; padding:0 20px; border:0; border-radius:999px;
-  background:var(--card); color:var(--text); font-size:1.2rem; font-weight:800;
-  box-shadow:0 0 0 3px var(--sun), 0 5px 0 3px rgba(27,42,107,.25);
-}
-.shine[hidden]{ display:none; }
-.shine:active{ transform:translateY(4px); box-shadow:0 0 0 3px var(--sun), 0 1px 0 3px rgba(27,42,107,.25); }
+.round.shine{ box-shadow:0 0 0 3px var(--sun), 0 4px 0 3px rgba(0,0,0,.2); }
+.round.shine[hidden]{ display:none; }
+.hud .round{ flex-shrink:0; }
+@media (max-width:360px){ .hud .round{ width:50px; height:50px; font-size:1.5rem; } .counter{ padding:6px 10px; font-size:1.1rem; } }
 
 .sheet{
   position:absolute; inset:0; display:none; align-items:center; justify-content:center; padding:24px;
