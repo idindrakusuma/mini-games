@@ -184,11 +184,10 @@ new ResizeObserver(() => { if (T) { resize(); drawNow(); } }).observe(pad);
   }, { once: true });
 })();
 
-// Mode gelap: ikuti data-theme kalau ada, kalau tidak ikuti pengaturan perangkat (sama seperti CSS).
+// Mode gelap: ikuti pengaturan perangkat (sama seperti CSS).
 const darkMQ = matchMedia('(prefers-color-scheme: dark)');
-const isDark = () => { const t = document.documentElement.dataset.theme; return t ? t === 'dark' : darkMQ.matches; };
+const isDark = () => darkMQ.matches;
 darkMQ.addEventListener?.('change', () => { colors = null; invalidate(); });
-new MutationObserver(() => { colors = null; invalidate(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
 // Gambar hanya saat ada yang berubah. Loop animasi hanya berjalan selama titik hijau berdenyut.
 function redraw(){ if (T && !raf) raf = requestAnimationFrame(draw); }

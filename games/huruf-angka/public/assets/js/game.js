@@ -111,8 +111,9 @@ function adapt(key, game, mistakes){
 
 /* ---------- Tata letak kartu ---------- */
 // Cari susunan kolom yang membuat kartu (rasio 3:4) sebesar mungkin di ruang yang ada.
-// Hanya susunan seimbang: setiap baris terisi penuh kecuali baris terakhir yang kurang paling banyak
-// satu kartu (4 → 4 atau 2×2, 5 → 5 atau 3+2, 3 → 3 atau 2+1). Susunan 4 → 3+1 ditolak.
+// Jumlah baris dicoba dari 1 sampai n (termasuk satu kolom); hanya susunan yang setiap barisnya terisi
+// penuh kecuali baris terakhir yang kurang paling banyak satu kartu (mis. 4 → 4, 2×2, atau 1×4;
+// 5 → 5, 3+2, atau 2+2+1). Susunan 4 → 3+1 ditolak. Baris tambahan hanya dipilih kalau kartu jadi jauh lebih besar.
 function fit(n, W, H, max, gap){
   let best = { size: 0, cols: n };
   for (let rows = 1; rows <= n; rows++) {
@@ -220,7 +221,10 @@ function sheet(on){
 }
 
 function dots(){
-  $('#dots').innerHTML = Array.from({ length: S.targets.length }, (_, i) => `<i class="${i < S.q ? 'done' : i === S.q ? 'now' : ''}"></i>`).join('');
+  // Untuk pembaca layar: progres sebagai progressbar ("2 dari 5").
+  const dotsEl = $('#dots'), total = S.targets.length, now = Math.min(S.q + 1, total);
+  dotsEl.setAttribute('aria-valuemax', total); dotsEl.setAttribute('aria-valuenow', now); dotsEl.setAttribute('aria-valuetext', `Soal ${now} dari ${total}`);
+  dotsEl.innerHTML = Array.from({ length: S.targets.length }, (_, i) => `<i class="${i < S.q ? 'done' : i === S.q ? 'now' : ''}"></i>`).join('');
 }
 
 // Ukuran kartu (dan slot) dari ruang yang tersedia: tinggi papan dikurangi teks soal,
