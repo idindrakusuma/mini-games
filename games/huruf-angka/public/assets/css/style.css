@@ -18,6 +18,7 @@ button:focus-visible, a:focus-visible{ outline:4px solid var(--sun); outline-off
 
 /* ---------- Home ---------- */
 [hidden]{ display:none !important; }
+#play:focus{ outline:none; }   /* fokus dipindah ke sini saat main, tanpa garis fokus */
 #home, #menu{
   height:100%; overflow-y:auto; display:flex; flex-direction:column; align-items:center; text-align:center;
   padding:calc(env(safe-area-inset-top,0px) + 24px) 20px calc(env(safe-area-inset-bottom,0px) + 24px);
@@ -36,6 +37,7 @@ h1{
   text-shadow:0 4px 0 rgba(255,255,255,.65);
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) h1{ text-shadow:0 4px 0 rgba(0,0,0,.25); } }
+:root[data-theme="dark"] h1{ text-shadow:0 4px 0 rgba(0,0,0,.25); }
 .lead{ font-size:1.25rem; line-height:1.35; color:var(--muted); max-width:22em; margin:0 0 22px; font-weight:500; }
 .stars{
   margin-top:22px; background:var(--card); border-radius:999px; padding:8px 20px;
@@ -129,8 +131,11 @@ h1{
 @keyframes pop{ 0%{ transform:scale(.6); } 70%{ transform:scale(1.12); } 100%{ transform:scale(1); } }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]) .slot:not(.filled){ border-color:rgba(255,255,255,.3); }
-  :root:not([data-theme="light"]) .dots i{ background:rgba(255,255,255,.2); }
+  :root:not([data-theme="light"]) .dots i:not(.done){ background:rgba(255,255,255,.2); }
 }
+:root[data-theme="dark"] .slot:not(.filled){ border-color:rgba(255,255,255,.3); }
+:root[data-theme="dark"] .dots i:not(.done){ background:rgba(255,255,255,.2); }
+
 #fx{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
 
 .sheet{

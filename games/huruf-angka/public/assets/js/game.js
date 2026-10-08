@@ -193,8 +193,10 @@ function start(set, game){
     S.targets = Array.from({ length: ROUND }, (_, i) => starts[i % starts.length]);
   }
   $('#winSheet').classList.remove('on'); fxReset();
-  play.classList.add('on');
+  // Menu di belakang overlay disembunyikan supaya Enter/Tab tidak mengenai tombolnya di tengah ronde.
+  play.classList.add('on'); $('#menu').hidden = true;
   question();
+  play.focus({ preventScroll: true });   // fokus ke area main (bukan tombol), jadi Enter tidak memicu apa-apa
 }
 
 function dots(){
@@ -332,8 +334,9 @@ function next(){
 
 function stop(){
   clearTimeout(timer); hush(); fxReset(); S = null;
-  play.classList.remove('on'); $('#winSheet').classList.remove('on');
+  play.classList.remove('on'); $('#winSheet').classList.remove('on'); $('#menu').hidden = false;
   showStars();
+  document.querySelector(`#menu .mode[data-game="${lastGame}"]`)?.focus({ preventScroll: true });   // kembali ke tombol asal
 }
 
 /* ---------- Kenalan: maju/mundur ---------- */

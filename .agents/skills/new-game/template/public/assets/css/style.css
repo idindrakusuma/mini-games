@@ -1,4 +1,5 @@
 [hidden]{ display:none !important; }
+#play:focus{ outline:none; }   /* fokus dipindah ke sini saat main, tanpa garis fokus */
 :root{
   --bg:{{BG}}; --card:#FFFDF7; --text:#1B2A6B; --muted:#3F5A92;
   --accent:{{ACCENT}}; --sun:#FFD23F; --water:#47C9E5; --btn-ink:#1B2A6B;
@@ -29,6 +30,7 @@ h1{
   text-shadow:0 4px 0 rgba(255,255,255,.65);
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) h1{ text-shadow:0 4px 0 rgba(0,0,0,.25); } }
+:root[data-theme="dark"] h1{ text-shadow:0 4px 0 rgba(0,0,0,.25); }
 .lead{ font-size:1.25rem; line-height:1.35; color:var(--muted); max-width:22em; margin:0 0 22px; font-weight:500; }
 .stars{
   margin-top:22px; background:var(--card); border-radius:999px; padding:8px 20px;
@@ -51,7 +53,7 @@ h1{
   width:56px; height:56px; border-radius:50%; border:0; background:var(--card); color:var(--text);
   font-size:1.7rem; box-shadow:0 4px 0 rgba(0,0,0,.2); display:grid; place-items:center;
 }
-.round[hidden]{ visibility:hidden; display:grid; }
+.round.spacer{ visibility:hidden; }   /* penyeimbang HUD supaya penghitung tetap di tengah */
 .counter{
   background:var(--card); color:var(--text); border-radius:999px; padding:6px 18px;
   font-size:1.35rem; font-weight:800; box-shadow:0 4px 0 rgba(0,0,0,.2); white-space:nowrap;

@@ -41,7 +41,12 @@ function resize(){
 }
 // Ukur ulang setiap kali ukuran canvas berubah (rotasi, teks HUD berganti baris, font termuat),
 // bukan hanya saat jendela di-resize, supaya sentuhan tetap pas dengan gambar.
-new ResizeObserver(() => { if(running) resize(); }).observe(cv);
+new ResizeObserver(() => {
+  if(!running) return;
+  resize();
+  // Setelah rotasi, gelembung di luar lebar baru ditarik masuk supaya tetap bisa diketuk.
+  for(const it of items) it.x = Math.min(Math.max(it.x, it.r), Math.max(it.r, CW - it.r));
+}).observe(cv);
 
 /* ---------- Gameplay (ganti bagian ini) ---------- */
 const GOAL = 5;
@@ -54,13 +59,19 @@ function spawn(){
 function setCounter(){ $('#counter').textContent = `{{EMOJI}} ${left}`; }
 
 function start(){
-  play.classList.add('on'); $('#winSheet').classList.remove('on'); clearTimeout(winTimer);
+  // Layar awal disembunyikan supaya Enter/Spasi tidak menekan "Main!" lagi di tengah ronde.
+  play.classList.add('on'); $('#home').hidden = true; $('#winSheet').classList.remove('on'); clearTimeout(winTimer);
   resize(); items = []; left = GOAL; setCounter();
   for(let i = 0; i < 3; i++) spawn();
   $('#tip').textContent = 'Ketuk gelembungnya!';
   running = true; last = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(loop);
+  play.focus({ preventScroll: true });   // fokus ke area main (bukan tombol), jadi Enter tidak memicu apa-apa
 }
-function stop(){ running = false; clearTimeout(winTimer); cancelAnimationFrame(raf); play.classList.remove('on'); showStars(); }
+function stop(){
+  running = false; clearTimeout(winTimer); cancelAnimationFrame(raf);
+  play.classList.remove('on'); $('#home').hidden = false; showStars();
+  $('#startBtn').focus({ preventScroll: true });
+}
 
 function loop(now){
   const dt = Math.min(.05, (now - last) / 1000); last = now;
