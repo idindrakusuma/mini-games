@@ -214,5 +214,5 @@ fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
 if (agents) fs.writeFileSync(agentsPath, agents);
 
 console.log(`✓ games/${slug} dibuat (${written.length} file)`);
-console.log('✓ kartu landing page, sitemap, README, package.json, dan AGENTS.md diperbarui');
+console.log(`✓ kartu landing page, sitemap, README, package.json${agents ? ', dan AGENTS.md' : ''} diperbarui`);
 console.log(`\nBerikutnya:\n  1. Buat gameplay di games/${slug}/public/assets/js/game.js\n  2. npm run ${slug}:images   (thumbnail & ikon)\n  3. npm run build lalu tes di browser`);

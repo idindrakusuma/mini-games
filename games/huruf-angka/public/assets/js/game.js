@@ -245,6 +245,8 @@ function refit(){
   if (slotSize) slotsEl.querySelectorAll('.slot').forEach(s => s.style.setProperty('--size', slotSize + 'px'));
 }
 new ResizeObserver(refit).observe($('.board'));
+// Font Baloo 2 dimuat belakangan (display=swap) dan bisa membuat teks soal berganti baris: ukur ulang.
+document.fonts?.addEventListener?.('loadingdone', refit);
 
 function question(){
   clearTimeout(timer); dots();
@@ -428,19 +430,4 @@ $('#homeBtn').addEventListener('click', stop);
 $('#againBtn').addEventListener('click', () => start(curSet, lastGame));
 $('#doneBtn').addEventListener('click', stop);
 
-/* ---------- theme-color ikut data-theme (kalau dipakai), sama seperti CSS ---------- */
-(function syncThemeColor(){
-  const metas = [...document.querySelectorAll('meta[name="theme-color"]')];
-  metas.forEach(m => { m.dataset.media ??= m.getAttribute('media') || ''; });
-  const apply = () => {
-    const t = document.documentElement.dataset.theme;
-    metas.forEach(m => {
-      const isDarkMeta = m.dataset.media.includes('dark');
-      if (!t) m.setAttribute('media', m.dataset.media);            // ikuti pengaturan perangkat
-      else m.setAttribute('media', (t === 'dark') === isDarkMeta ? 'all' : 'not all');
-    });
-  };
-  new MutationObserver(apply).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-  apply();
-})();
 })();
