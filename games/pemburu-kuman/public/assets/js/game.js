@@ -355,25 +355,32 @@ function shine(){
   for(const g of germs) if(g.state==='alive'){
     // cukup satu kuman yang teriak, supaya balon katanya tidak menumpuk
     g.state='pop'; g.popT=now; g.say=pick(OUCH[mode]); g.sayUntil=said?0:now+1100; said=true;
-    if(g.sx!=null) for(let i=0;i<8;i++) bubble(g.sx,g.sy,true);
+    if(g.sx!=null) for(let i=0;i<4;i++) bubble(g.sx,g.sy,true);
   }
   round.killed=round.total; updateCounter(); sPop();
   // kilau muncul bergantian, dua gelombang, masing-masing dengan bunyi "cling"
-  const pts=teethPoints(28), R=germR();
+  const pts=teethPoints(6), R=germR();
   let cx=0, cy=0; for(const [x,y] of pts){ cx+=x/pts.length; cy+=y/pts.length; }
   let spread=0; for(const [x,y] of pts) spread=Math.max(spread, Math.hypot(x-cx,y-cy));
   for(const d of [0,650]) parts.push({type:'glow',x:cx,y:cy,vx:0,vy:0,r:Math.max(R*2.2,spread*1.4),life:-d,max:900});
-  pts.forEach(([x,y],i) => parts.push({type:'sparkle',x,y,vx:0,vy:0,r:rnd(R*.45,R*.9),life:-(i%14)*60-(i>=14?650:0),max:750,rot:rnd(0,.8)}));
+  // sedikit kilau saja: tiga per gelombang, satu "cling" per gelombang
+  pts.forEach(([x,y],i) => parts.push({type:'sparkle',x,y,vx:0,vy:0,r:rnd(R*1.4,R*1.9),life:-(i%3)*140-(i>=3?650:0),max:700,rot:rnd(-.15,.15)}));
   sCling(.05); sCling(.7);
   setTimeout(() => { if(round===r && screen==='play') win(); }, 2400);
 }
+// Kilau cahaya putih: titik terang dengan sinar tipis, seperti pantulan cahaya di gigi.
 function sparkle(c,x,y,r,rot){
+  if(r<=0) return;
   c.save(); c.translate(x,y); c.rotate(rot);
-  c.shadowColor='rgba(255,200,40,.9)'; c.shadowBlur=r*.7;
-  c.beginPath();
-  for(let i=0;i<8;i++){ const a=i*Math.PI/4, rr=i%2?r*.2:r; c.lineTo(Math.cos(a)*rr,Math.sin(a)*rr); }
-  c.closePath(); c.fillStyle='#FFF8D6'; c.fill();
-  c.shadowBlur=0; c.lineJoin='round'; c.lineWidth=Math.max(1.5,r*.1); c.strokeStyle='#F5B400'; c.stroke(); c.restore();
+  const halo=c.createRadialGradient(0,0,0,0,0,r*.6);
+  halo.addColorStop(0,'rgba(255,255,255,.95)'); halo.addColorStop(1,'rgba(255,255,255,0)');
+  c.fillStyle=halo; c.beginPath(); c.arc(0,0,r*.6,0,7); c.fill();
+  // bayangan kebiruan tipis supaya kilau putih tetap terbaca di atas gigi putih
+  c.shadowColor='rgba(60,110,170,.55)'; c.shadowBlur=r*.18; c.fillStyle='#fff';
+  const ray=(len,w)=>{ c.beginPath(); c.moveTo(0,-len); c.quadraticCurveTo(w,0,0,len); c.quadraticCurveTo(-w,0,0,-len); c.fill(); };
+  ray(r,r*.1); c.rotate(Math.PI/2); ray(r*.8,r*.1);
+  c.rotate(Math.PI/4); ray(r*.35,r*.07); c.rotate(Math.PI/2); ray(r*.35,r*.07);
+  c.restore();
 }
 
 /* Tap & rub with finger */
