@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pensil Ajaib · Game Belajar Menulis Huruf &amp; Angka untuk Balita</title>
+<meta name="description" content="Game tracing huruf dan angka untuk balita. Ikuti panah dan tulis A–Z, a–z, serta 0–9 pakai jari. Gratis, langsung main di browser.">
+<meta name="author" content="Indra Kusuma">
+<meta name="keywords" content="belajar menulis huruf, tracing huruf, menulis angka, game balita, latihan menulis anak, huruf kecil, game edukasi">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#ECE1FF">
+<link rel="canonical" href="https://mini-games.indrakusuma.dev/pensil-ajaib/">
+
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Pensil Ajaib">
+<meta property="og:locale" content="id_ID">
+<meta property="og:url" content="https://mini-games.indrakusuma.dev/pensil-ajaib/">
+<meta property="og:title" content="Pensil Ajaib · Game Belajar Menulis Huruf &amp; Angka untuk Balita">
+<meta property="og:description" content="Game tracing huruf dan angka untuk balita. Ikuti panah dan tulis A–Z, a–z, serta 0–9 pakai jari. Gratis, langsung main di browser.">
+<meta property="og:image" content="https://mini-games.indrakusuma.dev/pensil-ajaib/assets/images/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Pensil Ajaib: Tulis huruf, lihat keajaibannya!">
+<meta property="article:author" content="Indra Kusuma">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Pensil Ajaib · Game Belajar Menulis Huruf &amp; Angka untuk Balita">
+<meta name="twitter:description" content="Game tracing huruf dan angka untuk balita. Ikuti panah dan tulis A–Z, a–z, serta 0–9 pakai jari. Gratis, langsung main di browser.">
+<meta name="twitter:image" content="https://mini-games.indrakusuma.dev/pensil-ajaib/assets/images/og-image.png">
+<meta name="twitter:image:alt" content="Pensil Ajaib: Tulis huruf, lihat keajaibannya!">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": ["WebApplication", "VideoGame"],
+  "name": "Pensil Ajaib",
+  "url": "https://mini-games.indrakusuma.dev/pensil-ajaib/",
+  "image": "https://mini-games.indrakusuma.dev/pensil-ajaib/assets/images/og-image.png",
+  "description": "Game tracing huruf dan angka untuk balita. Ikuti panah dan tulis A–Z, a–z, serta 0–9 pakai jari. Gratis, langsung main di browser.",
+  "inLanguage": "id",
+  "applicationCategory": "GameApplication",
+  "genre": ["Kids", "Casual"],
+  "operatingSystem": "Any (web browser)",
+  "isAccessibleForFree": true,
+  "audience": { "@type": "PeopleAudience", "suggestedMinAge": 3, "suggestedMaxAge": 10 },
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "IDR" },
+  "isPartOf": { "@type": "WebSite", "name": "Taman Bermain", "url": "https://mini-games.indrakusuma.dev/" },
+  "author": { "@type": "Person", "name": "Indra Kusuma", "url": "https://indrakusuma.dev" }
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<main id="home">
+  <div class="mascot" aria-hidden="true">✏️<span class="spark">✨</span></div>
+  <h1>Pensil Ajaib</h1>
+  <p class="lead">Tulis huruf, lihat keajaibannya!</p>
+  <div class="tabs" role="tablist">
+    <button role="tab" class="tab" data-set="besar" aria-selected="true">ABC</button>
+    <button role="tab" class="tab" data-set="kecil" aria-selected="false">abc</button>
+    <button role="tab" class="tab" data-set="angka" aria-selected="false">123</button>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="stars" id="starsHome">⭐ 0 bintang</div>
+  <p class="note">Untuk ayah dan bunda: ketuk huruf atau angka, lalu ajak anak mengikuti titik hijau dan panahnya dengan jari. Setiap 5 huruf yang selesai memberi 1 bintang. Tanda ✓ menunjukkan yang sudah pernah dilatih.</p>
+  <p class="back"><a href="../">← Taman Bermain</a></p>
+  <p class="credit">Dibuat oleh <a href="https://indrakusuma.dev" rel="author">Indra Kusuma</a></p>
+</main>
+
+<section id="play" aria-label="Menulis">
+  <div class="hud">
+    <button class="round" id="homeBtn" aria-label="Kembali pilih huruf">🏠</button>
+    <div class="chip" id="chip"></div>
+    <button class="round" id="speakBtn" aria-label="Ulangi suara">🔊</button>
+  </div>
+  <p class="say" id="say" aria-live="polite"></p>
+  <div class="padWrap"><canvas id="pad" aria-label="Papan menulis"></canvas></div>
+  <div class="controls">
+    <button class="round big alt" id="redoBtn" aria-label="Ulangi dari awal">↺</button>
+    <button class="round big" id="nextBtn" aria-label="Berikutnya">▶</button>
+  </div>
+  <canvas id="fx" aria-hidden="true"></canvas>
+  <div class="toast" id="toast" role="status"></div>
+</section>
+
+<svg id="measure" width="0" height="0" style="position:absolute" aria-hidden="true"></svg>
+<script src="assets/js/strokes.js"></script>
+<script src="assets/js/game.js"></script>
+</body>
+</html>
