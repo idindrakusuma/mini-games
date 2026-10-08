@@ -1,0 +1,5 @@
+MediaPipe Tasks Vision 0.10.35 (mediapipe-0.10.35/) dan model Face Landmarker
+(face_landmarker-f16-v1.task) dari Google, dilisensikan di bawah Apache License 2.0:
+https://www.apache.org/licenses/LICENSE-2.0
+Sumber: https://github.com/google-ai-edge/mediapipe
+Diunduh dengan games/pemburu-kuman/scripts/fetch-vendor.mjs.

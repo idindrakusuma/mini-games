@@ -24,7 +24,7 @@ Pemburu Kuman membuat rutinitas cuci tangan dan sikat gigi jadi permainan. Anak 
 Tunjukkan tangan ke kamera, lalu kuman muncul menempel di kulit. Gosok-gosok tangan seperti sedang cuci tangan pakai sabun sampai 6 kuman kabur.
 
 ### 🦷 Mode Gigi
-Buka mulut dan senyum lebar ke kamera, lalu kuman muncul di gigi. Sikat gigi sampai 5 kuman kabur.
+Buka mulut dan senyum lebar ke kamera, lalu kuman muncul di gigi. Sikat gigi sampai 5 kuman kabur. Posisi mulut dicari dengan model [MediaPipe Face Landmarker](https://ai.google.dev/edge/mediapipe/solutions/vision/face_landmarker) (gratis, Apache 2.0) yang disimpan di repo ini dan jalan di perangkat, jadi kuman benar-benar menempel di gigi dan ikut bergerak bersama mulut. Kalau model tidak bisa dimuat, game kembali ke deteksi warna.
 
 ### 🦠 Kuman yang hidup
 - Kuman bergoyang, berkedip, dan matanya melirik ke sana kemari.
@@ -51,7 +51,7 @@ Kalau kamera tidak diizinkan atau tidak tersedia, anak tetap bisa main dengan ga
 - Langsung main di browser tanpa install.
 
 ### 🔒 Privasi terjaga
-Kamera hanya dipakai di layar permainan. Deteksi tangan dan gigi berjalan sepenuhnya di perangkat, dan tidak ada foto atau video yang disimpan maupun dikirim ke mana pun.
+Kamera hanya dipakai di layar permainan. Deteksi tangan dan gigi berjalan sepenuhnya di perangkat, dan tidak ada foto atau video yang disimpan maupun dikirim ke mana pun. Model deteksi wajah memakai versi MediaPipe yang tidak mengirim metrik pemakaian, dan halaman ini melarang skrip mengirim permintaan ke domain lain (CSP `connect-src 'self'`).
 
 ## Pembuat
 
