@@ -37,13 +37,13 @@ function info(ch){
   if (/\d/.test(ch)) {
     const n = +ch;
     return { ask: `Ayo tulis angka ${NUMS[n]}!`, done: `Hebat! ${cap(NUMS[n])}!`,
-             label: `${ch}, ${NUMS[n]}! ${NUM_PICS[n].repeat(n)}`.trim() };
+             label: `${ch}, ${NUMS[n]}!`, pic: NUM_PICS[n].repeat(n) };
   }
   const [say, word, pic] = WORDS[ch.toUpperCase()];
   const size = setOf(ch);
   return { ask: `Ayo tulis huruf ${say} ${size}!`,
            done: word ? `Hebat! ${say}. ${word}!` : `Hebat! Huruf ${say}!`,
-           label: word ? `${ch} · ${word} ${pic}` : `${ch} · Hebat! ⭐` };
+           label: word ? `${ch} · ${word}` : `${ch} · Hebat!`, pic: word ? pic : '⭐' };
 }
 
 /* ---------- Suara ----------
@@ -57,14 +57,20 @@ function pickVoice(){
   voice = speechSynthesis.getVoices().find(v => /^id([-_]|$)/i.test(v.lang)) || null;
 }
 if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.addEventListener?.('voiceschanged', pickVoice); }
-function hush(){ if (clip) { clip.pause(); clip = null; } if ('speechSynthesis' in window) speechSynthesis.cancel(); }
+function hush(){ clearTimeout(speakTimer); if (clip) { clip.pause(); clip = null; } if ('speechSynthesis' in window) speechSynthesis.cancel(); }
+let speakTimer = 0;
 function say(key, text){
+  const busy = 'speechSynthesis' in window && (speechSynthesis.speaking || speechSynthesis.pending);
   hush();
   if (RECORDINGS[key]) { clip = new Audio(RECORDINGS[key]); clip.play().catch(() => {}); return; }
   if (!('speechSynthesis' in window)) return;
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'id-ID'; if (voice) u.voice = voice; u.rate = .85; u.pitch = 1.15;
-  speechSynthesis.speak(u);
+  // Beberapa browser membuang ucapan yang dipanggil di task yang sama dengan cancel(): beri jeda
+  // singkat kalau masih ada yang diucapkan. Ucapan pertama (tanpa cancel) tetap langsung, karena
+  // iOS mewajibkannya terjadi di dalam ketukan pengguna.
+  clearTimeout(speakTimer);
+  if (busy) speakTimer = setTimeout(() => speechSynthesis.speak(u), 60); else speechSynthesis.speak(u);
 }
 let ac = null;
 function audio(){ if(!ac){ try{ ac = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(ac && ac.state==='suspended') ac.resume(); return ac; }
@@ -86,7 +92,7 @@ const save = (k, v) => { try { localStorage.setItem(`${STORE}.${k}`, JSON.string
 // Bintang dari 5 karakter BERBEDA yang selesai: mengulang huruf yang sama dalam satu putaran
 // bintang tidak menambah hitungan. Setelah bintang didapat, hitungan mulai lagi dari nol.
 // Isi localStorage bisa rusak/beda bentuk: validasi tipe sebelum dipakai.
-const loadNum = (k, d) => { const v = load(k, d); return Number.isFinite(v) && v >= 0 ? v : d; };
+const loadNum = (k, d) => { const v = load(k, d); return Number.isInteger(v) && v >= 0 ? v : d; };
 const loadArr = k => { const v = load(k, []); return Array.isArray(v) ? v.filter(x => typeof x === 'string') : []; };
 const loadObj = k => { const v = load(k, {}); return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; };
 let stars = loadNum('stars', 0), pending = new Set(loadArr('pending'));
@@ -356,7 +362,9 @@ function strokeDone(){
   const i = info(T.ch);
   done[T.ch] = 1; save('done', done);
   pending.add(T.ch); save('pending', [...pending]);
-  $('#say').textContent = i.label;
+  // Gambar (emoji, bisa berulang untuk angka) disembunyikan dari pembaca layar; teksnya tetap dibacakan.
+  $('#say').textContent = i.label + ' ';
+  if (i.pic) { const pic = document.createElement('span'); pic.setAttribute('aria-hidden', 'true'); pic.textContent = i.pic; $('#say').append(pic); }
   $('#nextBtn').classList.add('ready');
   sWin();
   const r = pad.getBoundingClientRect();
@@ -375,8 +383,9 @@ let pointer = null, pointerType = '';
 pad.addEventListener('pointerdown', e => {
   // Hanya tombol utama (klik kiri / sentuhan / pena).
   if (!T || e.button !== 0) return;
-  // Sentuhan selebar telapak tangan diabaikan (jika browser melaporkan ukuran sentuhan).
-  if (e.pointerType === 'touch' && (e.width > 48 || e.height > 48)) return;
+  // Sentuhan seukuran telapak tangan diabaikan (jika browser melaporkan ukuran sentuhan).
+  // Ambang longgar (lebar DAN tinggi > 70px) supaya ujung jari balita yang ditekan rata tidak ikut ditolak.
+  if (e.pointerType === 'touch' && Math.min(e.width, e.height) > 70) return;
   // Pointer utama baru boleh mengambil alih kunci (supaya tidak macet kalau pointerup hilang),
   // tapi sentuhan tidak boleh merebut dari pena (telapak tangan saat menulis dengan stylus).
   if (pointer !== null && (!e.isPrimary || (pointerType === 'pen' && e.pointerType !== 'pen'))) return;

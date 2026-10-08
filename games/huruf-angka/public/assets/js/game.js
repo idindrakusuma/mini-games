@@ -49,18 +49,24 @@ function pickVoice(){
   voice = vs.find(v => /^id([-_]|$)/i.test(v.lang)) || null;
 }
 if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.addEventListener?.('voiceschanged', pickVoice); }
-function hush(){
+function hush(){ clearTimeout(speakTimer);
   if (clip) { clip.pause(); clip = null; }
   if ('speechSynthesis' in window) speechSynthesis.cancel();
 }
+let speakTimer = 0;
 function say(key, text){
+  const busy = 'speechSynthesis' in window && (speechSynthesis.speaking || speechSynthesis.pending);
   hush();
   if (RECORDINGS[key]) { clip = new Audio(RECORDINGS[key]); clip.play().catch(() => {}); return; }
   if (!('speechSynthesis' in window)) return;
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'id-ID'; if (voice) u.voice = voice;
   u.rate = .85; u.pitch = 1.15;
-  speechSynthesis.speak(u);
+  // Beberapa browser membuang ucapan yang dipanggil di task yang sama dengan cancel(): beri jeda
+  // singkat kalau masih ada yang diucapkan. Ucapan pertama (tanpa cancel) tetap langsung, karena
+  // iOS mewajibkannya terjadi di dalam ketukan pengguna.
+  clearTimeout(speakTimer);
+  if (busy) speakTimer = setTimeout(() => speechSynthesis.speak(u), 60); else speechSynthesis.speak(u);
 }
 
 /* Efek suara (Web Audio, tanpa file) */
@@ -82,7 +88,7 @@ const load = (k, d) => { try { const v = localStorage.getItem(`${STORE}.${k}`); 
 const save = (k, v) => { try { localStorage.setItem(`${STORE}.${k}`, JSON.stringify(v)); } catch(e) {} };
 // Isi localStorage bisa rusak/beda bentuk: validasi tipe sebelum dipakai.
 const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
-const loadNum = (k, d) => { const v = load(k, d); return Number.isFinite(v) && v >= 0 ? v : d; };
+const loadNum = (k, d) => { const v = load(k, d); return Number.isInteger(v) && v >= 0 ? v : d; };
 const loadObj = k => { const v = load(k, {}); return isObj(v) ? v : {}; };
 let stars = loadNum('stars', 0);
 function showStars(){ $('#starsHome').textContent = `⭐ ${stars} bintang`; }
@@ -232,12 +238,14 @@ function sizes(){
   return { size: layout(S.n, W, H, 160), slotSize };
 }
 // Rotasi layar / bilah alamat menyusut: ukur ulang kartu yang sedang tampil tanpa mengganti soal.
-new ResizeObserver(() => {
+const fitObserver = new ResizeObserver(() => {
   if (!S || !play.classList.contains('on')) return;
   const { size, slotSize } = sizes();
   cardsEl.querySelectorAll('.card').forEach(c => c.style.setProperty('--size', size + 'px'));
   if (slotSize) slotsEl.querySelectorAll('.slot').forEach(s => s.style.setProperty('--size', slotSize + 'px'));
-}).observe($('.board'));
+});
+fitObserver.observe($('.board'));
+fitObserver.observe(askEl);   // teks soal bisa bertambah baris (mis. "V, Vas bunga!") tanpa papan berubah ukuran
 
 function question(){
   clearTimeout(timer); dots();

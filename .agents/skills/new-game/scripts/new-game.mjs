@@ -193,6 +193,15 @@ let pkg;
 try { pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8')); } catch (e) { fail(`package.json tidak bisa dibaca: ${e.message}`); }
 (pkg.scripts ||= {})[`${slug}:images`] = `node games/${slug}/scripts/generate-images.mjs`;
 
+// Daftar perintah di AGENTS.md: tambahkan "npm run <slug>:images" setelah perintah :images terakhir.
+const agentsPath = path.join(root, 'AGENTS.md');
+let agents = fs.existsSync(agentsPath) ? fs.readFileSync(agentsPath, 'utf8') : null;
+if (agents) {
+  const lines = agents.split('\n'), lastImg = lines.findLastIndex(l => /^npm run [\w-]+:images\b/.test(l));
+  if (lastImg >= 0) { lines.splice(lastImg + 1, 0, `npm run ${slug}:images`); agents = lines.join('\n'); }
+  else { console.warn('! daftar perintah :images di AGENTS.md tidak ditemukan, tambahkan secara manual'); agents = null; }
+}
+
 // ---------- 2. tulis semuanya (semua pengecekan di atas sudah lolos) ----------
 for (const [d, text] of files) { fs.mkdirSync(path.dirname(d), { recursive: true }); fs.writeFileSync(d, text); }
 for (const d of ['public/assets/icons', 'public/assets/images']) fs.mkdirSync(path.join(gameDir, d), { recursive: true });
@@ -201,7 +210,8 @@ fs.writeFileSync(landingPath, landing);
 fs.writeFileSync(sitemapPath, sitemap);
 fs.writeFileSync(readmePath, readme);
 fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+if (agents) fs.writeFileSync(agentsPath, agents);
 
 console.log(`✓ games/${slug} dibuat (${written.length} file)`);
-console.log('✓ kartu landing page, sitemap, README, dan package.json diperbarui');
+console.log('✓ kartu landing page, sitemap, README, package.json, dan AGENTS.md diperbarui');
 console.log(`\nBerikutnya:\n  1. Buat gameplay di games/${slug}/public/assets/js/game.js\n  2. npm run ${slug}:images   (thumbnail & ikon)\n  3. npm run build lalu tes di browser`);
