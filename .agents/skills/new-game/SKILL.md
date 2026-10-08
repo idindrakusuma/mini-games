@@ -36,7 +36,7 @@ node .agents/skills/new-game/scripts/new-game.mjs \
 Script ini otomatis mengerjakan:
 - Membuat `games/<slug>/`: `public/index.html` (SEO lengkap: title, description, canonical, Open Graph, Twitter, JSON-LD), `site.webmanifest` (scope `./`), CSS, `game.js` placeholder yang sudah bisa dimainkan, `scripts/generate-images.mjs`, dan `README.md`.
 - Mengganti kartu "Segera hadir" pertama di landing page dengan kartu game ini. Kalau sudah tidak ada kartu "Segera hadir", kartu ditambahkan di akhir daftar.
-- Menambahkan URL game ke `sitemap.xml`, menambah baris di tabel README root, dan menambah script `npm run <slug>:images`.
+- Menambahkan URL game ke `sitemap.xml` (dan memperbarui `lastmod` halaman utama), menambah baris di tabel README root, menambah script `npm run <slug>:images` di `package.json`, dan menambah perintah itu ke daftar **Perintah** di `AGENTS.md`. Jangan tambahkan baris-baris ini lagi secara manual.
 
 ## 3. Buat gameplay
 

@@ -57,10 +57,11 @@ function pickVoice(){
   voice = speechSynthesis.getVoices().find(v => /^id([-_]|$)/i.test(v.lang)) || null;
 }
 if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.addEventListener?.('voiceschanged', pickVoice); }
-function hush(){ clearTimeout(speakTimer); if (clip) { clip.pause(); clip = null; } if ('speechSynthesis' in window) speechSynthesis.cancel(); }
+function hush(){ clearTimeout(speakTimer); speakTimer = 0; if (clip) { clip.pause(); clip = null; } if ('speechSynthesis' in window) speechSynthesis.cancel(); }
 let speakTimer = 0;
 function say(key, text){
-  const busy = 'speechSynthesis' in window && (speechSynthesis.speaking || speechSynthesis.pending);
+  // "Sibuk" juga kalau ucapan sebelumnya masih menunggu jeda (speakTimer), bukan hanya yang sedang berbunyi.
+  const busy = speakTimer !== 0 || ('speechSynthesis' in window && (speechSynthesis.speaking || speechSynthesis.pending));
   hush();
   if (RECORDINGS[key]) { clip = new Audio(RECORDINGS[key]); clip.play().catch(() => {}); return; }
   if (!('speechSynthesis' in window)) return;
@@ -69,8 +70,7 @@ function say(key, text){
   // Beberapa browser membuang ucapan yang dipanggil di task yang sama dengan cancel(): beri jeda
   // singkat kalau masih ada yang diucapkan. Ucapan pertama (tanpa cancel) tetap langsung, karena
   // iOS mewajibkannya terjadi di dalam ketukan pengguna.
-  clearTimeout(speakTimer);
-  if (busy) speakTimer = setTimeout(() => speechSynthesis.speak(u), 60); else speechSynthesis.speak(u);
+  if (busy) speakTimer = setTimeout(() => { speakTimer = 0; speechSynthesis.speak(u); }, 60); else speechSynthesis.speak(u);
 }
 let ac = null;
 function audio(){ if(!ac){ try{ ac = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(ac && ac.state==='suspended') ac.resume(); return ac; }
@@ -384,8 +384,9 @@ pad.addEventListener('pointerdown', e => {
   // Hanya tombol utama (klik kiri / sentuhan / pena).
   if (!T || e.button !== 0) return;
   // Sentuhan seukuran telapak tangan diabaikan (jika browser melaporkan ukuran sentuhan).
-  // Ambang longgar (lebar DAN tinggi > 70px) supaya ujung jari balita yang ditekan rata tidak ikut ditolak.
-  if (e.pointerType === 'touch' && Math.min(e.width, e.height) > 70) return;
+  // Ambang 60px pada salah satu sisi: ujung jari (biasanya < 40px) tetap diterima, sisi tangan
+  // yang panjang-sempit (mis. 120x40) dan telapak tangan ditolak.
+  if (e.pointerType === 'touch' && Math.max(e.width, e.height) > 60) return;
   // Pointer utama baru boleh mengambil alih kunci (supaya tidak macet kalau pointerup hilang),
   // tapi sentuhan tidak boleh merebut dari pena (telapak tangan saat menulis dengan stylus).
   if (pointer !== null && (!e.isPrimary || (pointerType === 'pen' && e.pointerType !== 'pen'))) return;
@@ -459,4 +460,20 @@ $('#homeBtn').addEventListener('click', close);
 $('#speakBtn').addEventListener('click', () => { if (T) { const i = info(T.ch); T.finished ? say(`hebat-${T.ch}`, i.done) : say(`tulis-${T.ch}`, i.ask); } });
 $('#redoBtn').addEventListener('click', () => { if (T) open(T.ch); });
 $('#nextBtn').addEventListener('click', () => { if (T) nextChar(); });
+
+/* ---------- theme-color ikut data-theme (kalau dipakai), sama seperti CSS ---------- */
+(function syncThemeColor(){
+  const metas = [...document.querySelectorAll('meta[name="theme-color"]')];
+  metas.forEach(m => { m.dataset.media ??= m.getAttribute('media') || ''; });
+  const apply = () => {
+    const t = document.documentElement.dataset.theme;
+    metas.forEach(m => {
+      const isDarkMeta = m.dataset.media.includes('dark');
+      if (!t) m.setAttribute('media', m.dataset.media);            // ikuti pengaturan perangkat
+      else m.setAttribute('media', (t === 'dark') === isDarkMeta ? 'all' : 'not all');
+    });
+  };
+  new MutationObserver(apply).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  apply();
+})();
 })();

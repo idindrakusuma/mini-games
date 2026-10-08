@@ -122,4 +122,20 @@ $('#startBtn').addEventListener('click', () => { audio(); start(); });
 $('#homeBtn').addEventListener('click', stop);
 $('#againBtn').addEventListener('click', start);
 $('#doneBtn').addEventListener('click', stop);
+
+/* ---------- theme-color ikut data-theme (kalau dipakai), sama seperti CSS ---------- */
+(function syncThemeColor(){
+  const metas = [...document.querySelectorAll('meta[name="theme-color"]')];
+  metas.forEach(m => { m.dataset.media ??= m.getAttribute('media') || ''; });
+  const apply = () => {
+    const t = document.documentElement.dataset.theme;
+    metas.forEach(m => {
+      const isDarkMeta = m.dataset.media.includes('dark');
+      if (!t) m.setAttribute('media', m.dataset.media);
+      else m.setAttribute('media', (t === 'dark') === isDarkMeta ? 'all' : 'not all');
+    });
+  };
+  new MutationObserver(apply).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  apply();
+})();
 })();

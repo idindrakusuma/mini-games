@@ -12,6 +12,7 @@
 //   games/landing-page/public/sitemap.xml URL game
 //   README.md                           baris di tabel "Daftar Game"
 //   package.json                        script "<slug>:images"
+//   AGENTS.md                           baris "npm run <slug>:images" di daftar Perintah
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';

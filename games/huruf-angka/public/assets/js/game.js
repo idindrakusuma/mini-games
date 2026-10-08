@@ -25,7 +25,7 @@ const LETTERS = [
   glyph, say, pic,
   // Q tidak punya kata benda sehari-hari yang akrab untuk balita: cukup sebut hurufnya.
   reveal: glyph === 'Q' ? `${say}! Pintar!` : `${say}. ${word}!`,
-  label: glyph === 'Q' ? 'Q! Pintar! ⭐' : `${glyph}, ${word}!`,
+  label: glyph === 'Q' ? 'Q! Pintar!' : `${glyph}, ${word}!`,
 }));
 const COUNT_PICS = ['🐥','🍎','⭐','🐟','🎈','🍓','🐞','🌸','🍪','🚗'];
 const NUM_WORDS = ['satu','dua','tiga','empat','lima','enam','tujuh','delapan','sembilan','sepuluh'];
@@ -49,13 +49,14 @@ function pickVoice(){
   voice = vs.find(v => /^id([-_]|$)/i.test(v.lang)) || null;
 }
 if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.addEventListener?.('voiceschanged', pickVoice); }
-function hush(){ clearTimeout(speakTimer);
+function hush(){ clearTimeout(speakTimer); speakTimer = 0;
   if (clip) { clip.pause(); clip = null; }
   if ('speechSynthesis' in window) speechSynthesis.cancel();
 }
 let speakTimer = 0;
 function say(key, text){
-  const busy = 'speechSynthesis' in window && (speechSynthesis.speaking || speechSynthesis.pending);
+  // "Sibuk" juga kalau ucapan sebelumnya masih menunggu jeda (speakTimer), bukan hanya yang sedang berbunyi.
+  const busy = speakTimer !== 0 || ('speechSynthesis' in window && (speechSynthesis.speaking || speechSynthesis.pending));
   hush();
   if (RECORDINGS[key]) { clip = new Audio(RECORDINGS[key]); clip.play().catch(() => {}); return; }
   if (!('speechSynthesis' in window)) return;
@@ -65,8 +66,7 @@ function say(key, text){
   // Beberapa browser membuang ucapan yang dipanggil di task yang sama dengan cancel(): beri jeda
   // singkat kalau masih ada yang diucapkan. Ucapan pertama (tanpa cancel) tetap langsung, karena
   // iOS mewajibkannya terjadi di dalam ketukan pengguna.
-  clearTimeout(speakTimer);
-  if (busy) speakTimer = setTimeout(() => speechSynthesis.speak(u), 60); else speechSynthesis.speak(u);
+  if (busy) speakTimer = setTimeout(() => { speakTimer = 0; speechSynthesis.speak(u); }, 60); else speechSynthesis.speak(u);
 }
 
 /* Efek suara (Web Audio, tanpa file) */
@@ -238,14 +238,13 @@ function sizes(){
   return { size: layout(S.n, W, H, 160), slotSize };
 }
 // Rotasi layar / bilah alamat menyusut: ukur ulang kartu yang sedang tampil tanpa mengganti soal.
-const fitObserver = new ResizeObserver(() => {
+function refit(){
   if (!S || !play.classList.contains('on')) return;
   const { size, slotSize } = sizes();
   cardsEl.querySelectorAll('.card').forEach(c => c.style.setProperty('--size', size + 'px'));
   if (slotSize) slotsEl.querySelectorAll('.slot').forEach(s => s.style.setProperty('--size', slotSize + 'px'));
-});
-fitObserver.observe($('.board'));
-fitObserver.observe(askEl);   // teks soal bisa bertambah baris (mis. "V, Vas bunga!") tanpa papan berubah ukuran
+}
+new ResizeObserver(refit).observe($('.board'));
 
 function question(){
   clearTimeout(timer); dots();
@@ -314,7 +313,7 @@ function tapGuess(card, item){
   [...cardsEl.children].forEach(c => { if (c !== card) c.classList.add('gone'); });
   card.classList.remove('hint'); card.classList.add('right', 'pic-on');
   burst(...centerOf(card));
-  askEl.textContent = item.label;
+  askEl.textContent = item.label; refit();   // teks bisa bertambah baris: ukur ulang kartu
   say(`benar-${S.set}-${item.glyph}`, item.reveal);
   later(next, 2400);
 }
@@ -342,7 +341,7 @@ function tapOrder(card, item){
   if (S.step < S.n) { say(`nama-${S.set}-${item.glyph}`, item.say); return; }
   S.locked = true;
   burst(...centerOf(slotsEl));
-  askEl.textContent = S.seq.map(i => i.glyph).join(' ') + ' 🎉';
+  askEl.textContent = S.seq.map(i => i.glyph).join(' ') + ' 🎉'; refit();
   say(`urut-${S.set}-${S.seq[0].glyph}-${S.n}`, S.seq.map(i => i.say).join(', ') + '. Hebat!');
   later(next, 2200 + S.n * 450);
 }
@@ -428,4 +427,20 @@ $('#speakBtn').addEventListener('click', () => { if (S && !S.locked) ask(); });
 $('#homeBtn').addEventListener('click', stop);
 $('#againBtn').addEventListener('click', () => start(curSet, lastGame));
 $('#doneBtn').addEventListener('click', stop);
+
+/* ---------- theme-color ikut data-theme (kalau dipakai), sama seperti CSS ---------- */
+(function syncThemeColor(){
+  const metas = [...document.querySelectorAll('meta[name="theme-color"]')];
+  metas.forEach(m => { m.dataset.media ??= m.getAttribute('media') || ''; });
+  const apply = () => {
+    const t = document.documentElement.dataset.theme;
+    metas.forEach(m => {
+      const isDarkMeta = m.dataset.media.includes('dark');
+      if (!t) m.setAttribute('media', m.dataset.media);            // ikuti pengaturan perangkat
+      else m.setAttribute('media', (t === 'dark') === isDarkMeta ? 'all' : 'not all');
+    });
+  };
+  new MutationObserver(apply).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  apply();
+})();
 })();
