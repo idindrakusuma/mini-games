@@ -90,18 +90,27 @@ const V = {
 const esc = {
   html: s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'),
   json: s => JSON.stringify(s).slice(1, -1),
-  js: s => s.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/`/g, '\\`').replace(/\$\{/g, '\\${'),
+  // Untuk nilai di dalam string/template literal JS dan komentar /* */: netralkan juga "*/", "</script"
+  // dan pemisah baris, supaya nilai tidak bisa menutup komentar/tag script atau memecah string.
+  js: s => s.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/`/g, '\\`').replace(/\$\{/g, '\\${')
+    .replace(/\*\//g, '*\\/').replace(/<\//g, '<\\/').replace(/\r?\n|\r|\u2028|\u2029/g, ' '),
 };
 // Di dalam <script type="application/ld+json"> entitas HTML tidak di-decode: isinya harus di-escape
 // sebagai JSON (dan "<" diganti \u003c supaya tidak bisa menutup tag script).
 const jsonLd = v => JSON.stringify(v).slice(1, -1).replace(/</g, '\\u003c');
+// Satu kali lewat: setiap placeholder diganti tepat sekali, jadi nilai yang sudah dimasukkan
+// (misalnya deskripsi berisi "{{URL}}") tidak ikut diproses ulang.
 function fill(text, file) {
-  if (file.endsWith('.html')) {
-    return text.replace(/(<script type="application\/ld\+json">)([\s\S]*?)(<\/script>)/g, (m, open, body, close) =>
-      open + body.replace(/\{\{([A-Z_]+)\}\}/g, (mm, k) => { if (!(k in V)) fail(`placeholder tidak dikenal ${mm} di ${file}`); return jsonLd(V[k]); }) + close)
-      .replace(/\{\{([A-Z_]+)\}\}/g, m => fillOne(m, file));
+  const PH = /\{\{([A-Z_]+)\}\}/g;
+  if (!file.endsWith('.html')) return text.replace(PH, m => fillOne(m, file));
+  const LD = /(<script type="application\/ld\+json">)([\s\S]*?)(<\/script>)/g;
+  let out = '', last = 0;
+  for (const m of text.matchAll(LD)) {
+    out += text.slice(last, m.index).replace(PH, x => fillOne(x, file));
+    out += m[1] + m[2].replace(PH, (x, k) => { if (!(k in V)) fail(`placeholder tidak dikenal ${x} di ${file}`); return jsonLd(V[k]); }) + m[3];
+    last = m.index + m[0].length;
   }
-  return text.replace(/\{\{([A-Z_]+)\}\}/g, m => fillOne(m, file));
+  return out + text.slice(last).replace(PH, x => fillOne(x, file));
 }
 function fillOne(m, file) {
   const k = m.slice(2, -2);

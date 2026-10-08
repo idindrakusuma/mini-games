@@ -21,7 +21,7 @@ Game tracing huruf dan angka untuk balita. Ikuti panah dan tulis A–Z, a–z, s
 3. Setelah satu goresan selesai, titik hijau pindah ke awal goresan berikutnya.
 4. Kalau semua goresan selesai, huruf berubah jadi **pelangi** dan dibacakan ("Hebat! be. Bola!"). Ketuk ▶ untuk karakter berikutnya.
 
-Setiap 5 karakter yang selesai memberi 1 bintang. Karakter yang sudah pernah dilatih diberi tanda ✓.
+Setiap 5 karakter **berbeda** yang selesai memberi 1 bintang (mengulang karakter yang sama tidak dihitung). Karakter yang sudah pernah dilatih diberi tanda ✓.
 
 ## Dirancang untuk balita
 

@@ -48,7 +48,7 @@ Ganti bagian **Gameplay** di `games/<slug>/public/assets/js/game.js`. Bagian bin
 - **Tidak ada kalah yang menyakitkan.** Tidak ada game over, timer yang menekan, atau hal yang menakutkan.
 - **Tampilan.** Cek mode gelap dan `prefers-reduced-motion`. Hormati `env(safe-area-inset-*)`.
 - **Tetap mandiri.** Jangan import file dari game lain. Pakai path relatif saja. Key `localStorage` harus memakai prefix dari `STORE`.
-- Kalau butuh kamera atau mikrofon: proses di perangkat, sediakan cara main tanpa izin tersebut, lalu sesuaikan `Permissions-Policy` di `vercel.json`.
+- Kalau butuh kamera atau mikrofon: proses di perangkat, sediakan cara main tanpa izin tersebut, lalu izinkan hanya untuk game ini di `vercel.json` (contoh: aturan `/pemburu-kuman/(.*)` yang memberi `camera=(self)`, dan kecualikan path game itu dari aturan umum yang menolak kamera).
 - Lengkapi bagian "Cara Main" di `games/<slug>/README.md`.
 
 ## 4. Thumbnail dan ikon
@@ -81,6 +81,6 @@ Pakai Playwright dengan viewport HP (misalnya `devices['iPhone 13']`), mode tera
 
 ## 6. Selesaikan
 
-- Kalau CSS landing page berubah, naikkan `?v=N` di link stylesheet-nya.
+- CSS/JS selalu divalidasi ulang ke server, jadi tidak perlu `?v=N`. Gambar/ikon di-cache 1 hari: kalau mengganti gambar dengan nama file yang sama (misalnya membuat ulang `icon-192.png` yang tampil di landing page), tambahkan `?v=N` di referensinya.
 - Commit dengan pesan yang jelas, lalu push ke branch yang diminta user.
 - Laporkan ke user: URL game (`https://mini-games.indrakusuma.dev/<slug>/`), screenshot, dan apa saja yang belum dites (misalnya Safari asli atau perangkat fisik).

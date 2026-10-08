@@ -172,14 +172,14 @@ function open(ch){
   $('#chip').textContent = ch;
   $('#say').textContent = 'Ikuti titik hijau, ya!';
   $('#nextBtn').classList.remove('ready');
-  play.classList.add('on'); fxReset(); resize();
+  play.classList.add('on'); $('#home').hidden = true; fxReset(); resize();   // grid di belakang tidak bisa difokus
   say(`tulis-${ch}`, i.ask);
   lastInput = performance.now(); drawNow();
 }
 function close(){
   T = null; cancelAnimationFrame(raf); raf = 0; pointer = null; hush(); fxReset();
   $('#toast').classList.remove('on');
-  play.classList.remove('on'); renderGrid(); showStars();
+  play.classList.remove('on'); $('#home').hidden = false; renderGrid(); showStars();
 }
 function nextChar(){
   const list = SETS[/\d/.test(T.ch) ? 'angka' : T.ch === T.ch.toUpperCase() ? 'besar' : 'kecil'];
@@ -340,7 +340,9 @@ function strokeDone(){
 // Hanya satu jari yang menulis. Sentuhan lain (telapak tangan, jari kedua) diabaikan.
 let pointer = null;
 pad.addEventListener('pointerdown', e => {
-  if (!T || pointer !== null) return;
+  // Hanya tombol utama (klik kiri / sentuhan). Jari utama yang baru selalu boleh mengambil alih,
+  // jadi kunci tidak bisa macet kalau pointerup sebelumnya hilang. Jari tambahan diabaikan.
+  if (!T || e.button !== 0 || (pointer !== null && !e.isPrimary)) return;
   pointer = e.pointerId; T.onTrack = false; wake();
   try { pad.setPointerCapture(e.pointerId); } catch (err) { /* pointer sudah tidak aktif: abaikan */ }
   follow(toBox(e));
@@ -402,8 +404,8 @@ function toast(text){
   clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('on'), 2200);
 }
 
-// Untuk scripts/test-trace.mjs: ubah koordinat kotak 120x180 ke koordinat layar.
-window.pensilAjaibTest = { toScreen: (x, y) => { const r = pad.getBoundingClientRect(); return { x: r.left + view.ox + x * view.s, y: r.top + view.oy + y * view.s, s: view.s }; } };
+// Untuk scripts/test-trace.mjs (hanya aktif dengan ?test di URL): ubah koordinat kotak ke koordinat layar.
+if (new URLSearchParams(location.search).has('test')) window.pensilAjaibTest = { toScreen: (x, y) => { const r = pad.getBoundingClientRect(); return { x: r.left + view.ox + x * view.s, y: r.top + view.oy + y * view.s, s: view.s }; } };
 
 /* ---------- Tombol ---------- */
 $('#homeBtn').addEventListener('click', close);

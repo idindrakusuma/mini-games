@@ -183,7 +183,8 @@ function start(set, game){
   const n = game === 'kenal' ? 1 : LEVELS[game][levelOf(key, game)];
   S = { set, game, key, n, q: 0, mistakes: 0, items };
   if (game === 'kenal') {
-    const from = kenalPos(set) % items.length;
+    // Sesi selalu 5 kartu berurutan tanpa melompat dari akhir ke awal: ... U–Y, V–Z, lalu kembali ke A.
+    const from = Math.min(kenalPos(set), items.length - ROUND); S.from = from;
     S.targets = Array.from({ length: ROUND }, (_, i) => items[(from + i) % items.length]);
   }
   else if (game === 'tebak') S.targets = sample(items, ROUND);
@@ -315,7 +316,7 @@ function next(){
   if (S.q < ROUND) { question(); return; }
   dots();
   if (S.game === 'kenal') {
-    kenal[S.set] = (kenalPos(S.set) + ROUND) % S.items.length; save('kenal', kenal);
+    kenal[S.set] = S.from + ROUND >= S.items.length ? 0 : S.from + ROUND; save('kenal', kenal);
     const first = S.targets[0].glyph, last = S.targets[ROUND - 1].glyph;
     $('#winText').textContent = `Kamu sudah kenalan dengan ${first} sampai ${last}. Dapat 1 bintang!`;
   } else {

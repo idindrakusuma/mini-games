@@ -9,7 +9,7 @@ const p = await (await b.newContext(devices[process.env.DEV || 'iPhone 13'])).ne
 const errors = [];
 p.on('pageerror', e => errors.push(e.message));
 p.on('response', r => { if (r.status() >= 400) errors.push(r.status() + ' ' + r.url()); });
-await p.goto(BASE + '/pensil-ajaib/', { waitUntil: 'networkidle' });
+await p.goto(BASE + '/pensil-ajaib/?test', { waitUntil: 'networkidle' });   // ?test mengaktifkan pensilAjaibTest
 
 // Titik jalur di layar, lewat pensilAjaibTest.toScreen dari game.js (rumus skala tidak diduplikasi di sini)
 const plan = (ch, jitter) => p.evaluate(([ch, jitter]) => {
