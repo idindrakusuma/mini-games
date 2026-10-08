@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Huruf &amp; Angka · Flash Card Huruf &amp; Angka untuk Balita</title>
+<meta name="description" content="Flash card huruf dan angka untuk balita. Ronde singkat, tampilan tenang, tanpa timer, cocok untuk anak yang mudah terdistraksi. Gratis, langsung main di browser.">
+<meta name="author" content="Indra Kusuma">
+<meta name="keywords" content="flash card anak, belajar huruf, belajar angka, alfabet anak, game balita, game edukasi, belajar membaca">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#FFF3C4">
+<link rel="canonical" href="https://mini-games.indrakusuma.dev/huruf-angka/">
+
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Huruf &amp; Angka">
+<meta property="og:locale" content="id_ID">
+<meta property="og:url" content="https://mini-games.indrakusuma.dev/huruf-angka/">
+<meta property="og:title" content="Huruf &amp; Angka · Flash Card Huruf &amp; Angka untuk Balita">
+<meta property="og:description" content="Flash card huruf dan angka untuk balita. Ronde singkat, tampilan tenang, tanpa timer, cocok untuk anak yang mudah terdistraksi. Gratis, langsung main di browser.">
+<meta property="og:image" content="https://mini-games.indrakusuma.dev/huruf-angka/assets/images/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Huruf &amp; Angka: Yuk kenalan sama huruf &amp; angka!">
+<meta property="article:author" content="Indra Kusuma">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Huruf &amp; Angka · Flash Card Huruf &amp; Angka untuk Balita">
+<meta name="twitter:description" content="Flash card huruf dan angka untuk balita. Ronde singkat, tampilan tenang, tanpa timer, cocok untuk anak yang mudah terdistraksi. Gratis, langsung main di browser.">
+<meta name="twitter:image" content="https://mini-games.indrakusuma.dev/huruf-angka/assets/images/og-image.png">
+<meta name="twitter:image:alt" content="Huruf &amp; Angka: Yuk kenalan sama huruf &amp; angka!">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": ["WebApplication", "VideoGame"],
+  "name": "Huruf &amp; Angka",
+  "url": "https://mini-games.indrakusuma.dev/huruf-angka/",
+  "image": "https://mini-games.indrakusuma.dev/huruf-angka/assets/images/og-image.png",
+  "description": "Flash card huruf dan angka untuk balita. Ronde singkat, tampilan tenang, tanpa timer, cocok untuk anak yang mudah terdistraksi. Gratis, langsung main di browser.",
+  "inLanguage": "id",
+  "applicationCategory": "GameApplication",
+  "genre": ["Kids", "Casual"],
+  "operatingSystem": "Any (web browser)",
+  "isAccessibleForFree": true,
+  "audience": { "@type": "PeopleAudience", "suggestedMinAge": 3, "suggestedMaxAge": 10 },
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "IDR" },
+  "isPartOf": { "@type": "WebSite", "name": "Taman Bermain", "url": "https://mini-games.indrakusuma.dev/" },
+  "author": { "@type": "Person", "name": "Indra Kusuma", "url": "https://indrakusuma.dev" }
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<main id="home">
+  <div class="mascot" aria-hidden="true"><span class="fc fa">A</span><span class="fc fb">B</span><span class="fc f3">3</span></div>
+  <h1>Huruf &amp; Angka</h1>
+  <p class="lead">Yuk kenalan sama huruf &amp; angka!</p>
+  <div class="modes">
+    <button class="mode m1" data-set="huruf" data-game="tebak"><span class="ico" aria-hidden="true">🔤</span><b>Tebak Huruf</b></button>
+    <button class="mode m2" data-set="angka" data-game="tebak"><span class="ico" aria-hidden="true">🔢</span><b>Tebak Angka</b></button>
+    <button class="mode m3" data-set="huruf" data-game="urut"><span class="ico" aria-hidden="true">🧩</span><b>Urutkan Huruf</b></button>
+    <button class="mode m4" data-set="angka" data-game="urut"><span class="ico" aria-hidden="true">🧩</span><b>Urutkan Angka</b></button>
+  </div>
+  <div class="stars" id="starsHome">⭐ 0 bintang</div>
+  <p class="note">Untuk ayah dan bunda: satu ronde berisi 5 soal tanpa batas waktu. Nyalakan suara HP, karena soalnya dibacakan. Tingkat kesulitan menyesuaikan sendiri.</p>
+  <p class="back"><a href="../">← Taman Bermain</a></p>
+  <p class="credit">Dibuat oleh <a href="https://indrakusuma.dev" rel="author">Indra Kusuma</a></p>
+</main>
+
+<section id="play" aria-label="Main">
+  <div class="hud">
+    <button class="round" id="homeBtn" aria-label="Kembali ke awal">🏠</button>
+    <div class="dots" id="dots" aria-label="Soal"></div>
+    <button class="round" id="speakBtn" aria-label="Ulangi suara">🔊</button>
+  </div>
+  <div class="board">
+    <p class="ask" id="ask" aria-live="polite"></p>
+    <div class="slots" id="slots"></div>
+    <div class="cards" id="cards"></div>
+  </div>
+  <canvas id="fx" aria-hidden="true"></canvas>
+
+  <div class="sheet" id="winSheet">
+    <div class="panel">
+      <div class="big">🌟</div>
+      <h2>Hore, hebat!</h2>
+      <p id="winText">Kamu dapat 1 bintang!</p>
+      <button class="btn" id="againBtn">Main lagi</button>
+      <button class="btn alt" id="doneBtn">Selesai</button>
+    </div>
+  </div>
+</section>
+
+<script src="assets/js/game.js"></script>
+</body>
+</html>

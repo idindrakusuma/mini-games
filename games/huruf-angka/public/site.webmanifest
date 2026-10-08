@@ -1,0 +1,16 @@
+{
+  "name": "Huruf & Angka",
+  "short_name": "Huruf",
+  "description": "Flash card huruf dan angka untuk balita. Ronde singkat, tampilan tenang, tanpa timer, cocok untuk anak yang mudah terdistraksi. Gratis, langsung main di browser.",
+  "lang": "id",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#FFF3C4",
+  "theme_color": "#FFF3C4",
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

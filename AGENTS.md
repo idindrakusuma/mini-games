@@ -52,6 +52,7 @@ npm run build                  # susun dist/
 npm run dev                    # build + sajikan dist/
 npm run pemburu-kuman:images   # generate ulang og-image & ikon (butuh Playwright)
 npm run landing-page:images
+npm run huruf-angka:images
 ```
 
 Kalau Playwright tidak bisa mengunduh Chromium sendiri, set `CHROMIUM_PATH` ke binary Chromium yang ada.
