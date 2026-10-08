@@ -1,0 +1,7 @@
+/* TEAM */
+Author: Indra Kusuma
+Site: https://indrakusuma.dev
+
+/* SITE */
+Language: Bahasa Indonesia
+Standards: HTML5, CSS3, Canvas

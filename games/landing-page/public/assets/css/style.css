@@ -1,0 +1,93 @@
+:root{
+  --bg:#BFEFFA; --card:#FFFDF7; --text:#1B2A6B; --muted:#3F5A92;
+  --sun:#FFD23F; --soap:#FF8FB8; --leaf:#7BD88F; --water:#47C9E5;
+  --cloud:rgba(255,255,255,.85); --soon:#E6EEF5; --shadow:rgba(27,42,107,.22);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#103A62; --card:#1B4D7E; --text:#FFFDF7; --muted:#BFE3F5;
+    --cloud:rgba(255,255,255,.14); --soon:#244F7A; --shadow:rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#103A62; --card:#1B4D7E; --text:#FFFDF7; --muted:#BFE3F5;
+  --cloud:rgba(255,255,255,.14); --soon:#244F7A; --shadow:rgba(0,0,0,.35);
+}
+*,*::before,*::after{ box-sizing:border-box; }
+html{ min-height:100%; }
+body{
+  margin:0; min-height:100%; background:var(--bg); color:var(--text);
+  font-family:"Baloo 2","Trebuchet MS","Segoe UI Rounded",system-ui,sans-serif;
+  -webkit-tap-highlight-color:transparent; overflow-x:hidden;
+}
+a{ color:inherit; }
+a:focus-visible{ outline:4px solid var(--sun); outline-offset:4px; }
+
+/* ---------- Langit ---------- */
+.sky{ position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:0; }
+.sun{
+  position:absolute; top:-60px; right:-60px; width:150px; height:150px; border-radius:50%;
+  background:var(--sun); box-shadow:0 0 0 18px rgba(255,210,63,.35), 0 0 0 38px rgba(255,210,63,.15);
+  animation:spin-pulse 6s ease-in-out infinite;
+}
+.cloud{
+  position:absolute; height:38px; border-radius:40px; background:var(--cloud);
+  animation:drift 28s linear infinite;
+}
+.cloud::before,.cloud::after{ content:""; position:absolute; background:inherit; border-radius:50%; }
+.cloud::before{ width:46px; height:46px; left:16px; top:-22px; }
+.cloud::after{ width:34px; height:34px; left:52px; top:-14px; }
+.c1{ width:110px; top:12%; left:-130px; }
+.c2{ width:90px; top:46%; left:-130px; animation-duration:36s; animation-delay:-14s; }
+.c3{ width:130px; top:78%; left:-130px; animation-duration:44s; animation-delay:-30s; }
+@keyframes drift{ to{ transform:translateX(calc(100vw + 160px)); } }
+@keyframes spin-pulse{ 50%{ transform:scale(1.06); } }
+
+/* ---------- Isi ---------- */
+main{
+  position:relative; z-index:1; max-width:960px; margin:0 auto;
+  padding:calc(28px + env(safe-area-inset-top,0px)) 16px calc(28px + env(safe-area-inset-bottom,0px));
+  text-align:center;
+}
+.hero h1{
+  font-size:clamp(44px, 12vw, 76px); line-height:1; margin:18px 0 8px; font-weight:800;
+  text-shadow:0 5px 0 rgba(255,255,255,.65);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .hero h1{ text-shadow:0 5px 0 rgba(0,0,0,.25); } }
+.lead{ font-size:clamp(20px, 5vw, 26px); color:var(--muted); margin:0 0 24px; font-weight:500; }
+
+.games{
+  list-style:none; margin:0; padding:0; display:grid; gap:18px;
+  grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));
+}
+.card{
+  position:relative; height:100%; display:flex; flex-direction:column; align-items:center; gap:4px;
+  padding:22px 18px 20px; border-radius:30px; background:var(--card); text-decoration:none;
+  border:4px solid var(--accent, var(--water)); box-shadow:0 8px 0 var(--shadow);
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+a.card:hover{ transform:translateY(-4px) rotate(-1deg); box-shadow:0 12px 0 var(--shadow); }
+a.card:active{ transform:translateY(5px); box-shadow:0 3px 0 var(--shadow); }
+.card img, .card .ico{
+  width:96px; height:96px; border-radius:26px; display:grid; place-items:center; font-size:58px;
+  animation:bob 2.6s ease-in-out infinite;
+}
+.card b{ font-size:28px; line-height:1.1; margin-top:8px; }
+.card small{ font-size:18px; line-height:1.25; color:var(--muted); flex:1; }
+.play{
+  margin-top:12px; font-weight:800; font-size:22px; border-radius:999px; padding:6px 26px;
+  background:var(--accent, var(--water)); color:#1B2A6B; box-shadow:0 5px 0 rgba(27,42,107,.22);
+}
+.card.soap{ --accent:var(--soap); }
+.card.soon{ --accent:var(--soon); border-style:dashed; box-shadow:none; opacity:.85; }
+.card.soon .ico{ background:var(--soon); filter:grayscale(.3); animation:none; }
+.card.soon .play{ background:var(--soon); color:var(--muted); box-shadow:none; }
+@keyframes bob{ 50%{ transform:translateY(-6px) rotate(3deg); } }
+
+.note{ margin:30px auto 6px; max-width:520px; font-size:16px; color:var(--muted); }
+.credit{ margin:0; font-size:16px; color:var(--muted); }
+.credit a{ font-weight:700; }
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{ animation:none !important; transition:none !important; }
+}

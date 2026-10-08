@@ -1,0 +1,16 @@
+{
+  "name": "Pemburu Kuman",
+  "short_name": "Pemburu Kuman",
+  "description": "Game kamera untuk anak: usir kuman lucu sambil cuci tangan dan sikat gigi.",
+  "lang": "id",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#BFEFFA",
+  "theme_color": "#BFEFFA",
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

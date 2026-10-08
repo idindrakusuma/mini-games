@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pemburu Kuman · Game Cuci Tangan &amp; Sikat Gigi untuk Anak</title>
+<meta name="description" content="Pemburu Kuman: game kamera gratis untuk anak. Usir kuman lucu sambil cuci tangan pakai sabun dan sikat gigi. Berjalan di browser, tanpa install, kamera tidak merekam apa pun.">
+<meta name="author" content="Indra Kusuma">
+<meta name="keywords" content="game anak, cuci tangan, sikat gigi, kuman, edukasi kebersihan, game edukasi, PHBS, game kamera">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#BFEFFA">
+<link rel="canonical" href="https://mini-games.indrakusuma.dev/pemburu-kuman/">
+
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Pemburu Kuman">
+<meta property="og:locale" content="id_ID">
+<meta property="og:url" content="https://mini-games.indrakusuma.dev/pemburu-kuman/">
+<meta property="og:title" content="Pemburu Kuman · Game Cuci Tangan &amp; Sikat Gigi untuk Anak">
+<meta property="og:description" content="Arahkan kamera ke tangan atau gigi, lalu usir kuman lucu pakai sabun dan sikat gigi! Gratis, langsung main di browser.">
+<meta property="og:image" content="https://mini-games.indrakusuma.dev/pemburu-kuman/assets/images/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Pemburu Kuman: tiga kuman kartun lucu berwarna hijau, ungu, dan pink">
+<meta property="article:author" content="Indra Kusuma">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Pemburu Kuman · Game Cuci Tangan &amp; Sikat Gigi untuk Anak">
+<meta name="twitter:description" content="Arahkan kamera ke tangan atau gigi, lalu usir kuman lucu pakai sabun dan sikat gigi!">
+<meta name="twitter:image" content="https://mini-games.indrakusuma.dev/pemburu-kuman/assets/images/og-image.png">
+<meta name="twitter:image:alt" content="Pemburu Kuman: tiga kuman kartun lucu berwarna hijau, ungu, dan pink">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": ["WebApplication", "VideoGame"],
+  "name": "Pemburu Kuman",
+  "url": "https://mini-games.indrakusuma.dev/pemburu-kuman/",
+  "image": "https://mini-games.indrakusuma.dev/pemburu-kuman/assets/images/og-image.png",
+  "description": "Game kamera untuk anak: usir kuman lucu sambil cuci tangan pakai sabun dan sikat gigi.",
+  "inLanguage": "id",
+  "applicationCategory": "EducationalApplication",
+  "genre": ["Educational", "Kids"],
+  "operatingSystem": "Any (web browser)",
+  "browserRequirements": "Requires a modern browser with camera access (optional)",
+  "isAccessibleForFree": true,
+  "audience": { "@type": "PeopleAudience", "suggestedMinAge": 3, "suggestedMaxAge": 10 },
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "IDR" },
+  "author": { "@type": "Person", "name": "Indra Kusuma", "url": "https://indrakusuma.dev" },
+  "creator": { "@type": "Person", "name": "Indra Kusuma", "url": "https://indrakusuma.dev" }
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<main id="home">
+  <canvas id="heroGerm" width="440" height="360" aria-hidden="true"></canvas>
+  <h1>Pemburu Kuman</h1>
+  <p class="lead">Ada kuman lucu yang suka ngumpet. Arahkan kamera, lalu usir mereka pakai sabun dan sikat gigi!</p>
+  <div class="choices">
+    <button class="choice hands" data-mode="hands"><span class="ico">🖐️</span><b>Tangan</b><small>Cuci pakai sabun</small></button>
+    <button class="choice teeth" data-mode="teeth"><span class="ico">🦷</span><b>Gigi</b><small>Sikat sampai bersih</small></button>
+  </div>
+  <div class="stars" id="starsHome">⭐ 0 bintang</div>
+  <p class="note">Untuk ayah dan bunda: kamera hanya dipakai di layar ini. Tidak ada foto atau video yang disimpan maupun dikirim.</p>
+  <p class="credit">Dibuat oleh <a href="https://indrakusuma.dev" rel="author">Indra Kusuma</a></p>
+</main>
+
+<section id="play" aria-label="Main">
+  <video id="video" playsinline muted></video>
+  <canvas id="stage"></canvas>
+  <div class="hud">
+    <button class="round" id="homeBtn" aria-label="Kembali ke awal">🏠</button>
+    <div class="counter" id="counter">🦠 6</div>
+    <button class="round" id="flipBtn" aria-label="Ganti kamera">🔄</button>
+  </div>
+  <div class="tip" id="tip"></div>
+
+  <div class="sheet" id="camSheet">
+    <div class="panel">
+      <div class="big">📷</div>
+      <h2>Kameranya belum bisa dibuka</h2>
+      <p>Izinkan kamera di browser lalu coba lagi. Bisa juga main pakai gambar tangan kartun.</p>
+      <button class="btn" id="retryCam">Coba lagi</button>
+      <button class="btn alt" id="noCam">Main tanpa kamera</button>
+    </div>
+  </div>
+
+  <div class="sheet" id="winSheet">
+    <div class="panel">
+      <div class="big">🌟</div>
+      <h2 id="winTitle">Hore, bersih!</h2>
+      <p id="winText">Semua kuman kabur. Kamu dapat 1 bintang!</p>
+      <button class="btn" id="againBtn">Usir kuman lagi</button>
+      <button class="btn alt" id="doneBtn">Selesai</button>
+    </div>
+  </div>
+</section>
+
+<script src="assets/js/germ.js"></script>
+<script src="assets/js/game.js"></script>
+</body>
+</html>
