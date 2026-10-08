@@ -59,7 +59,7 @@ const storeOf = s => s.replace(/-([a-z0-9])/g, (_, c) => c.toUpperCase());
 const clash = fs.readdirSync(path.join(root, 'games')).find(g => g !== 'landing-page' && storeOf(g) === storeOf(slug));
 if (clash) fail(`prefix localStorage "${storeOf(slug)}" bentrok dengan games/${clash}; pilih slug lain`);
 
-const name = args.name.trim();
+const name = args.name;
 const words = name.split(/\s+/);
 // Judul thumbnail: pecah per baris maksimal ~10 huruf (kata pendek seperti "&" ikut baris sebelumnya)
 const ogLines = words.reduce((lines, w) => {
@@ -72,13 +72,15 @@ const longest = Math.max(...ogLines.map(w => w.length));
 const today = new Date().toISOString().slice(0, 10);
 // short_name PWA (label di bawah ikon) maksimal 12 huruf. Kalau nama terlalu panjang dan --short-name
 // tidak diberikan: coba tanpa spasi ("Huruf&Angka"), kalau masih kepanjangan pakai kata pertama + peringatan.
+// Potong per karakter (bukan per unit UTF-16) supaya emoji tidak terbelah.
+const cut = (s, n) => Array.from(s).slice(0, n).join('');
 function shortName(){
-  if (args['short-name']) return args['short-name'].slice(0, 12);
-  if (name.length <= 12) return name;
+  if (args['short-name']) return cut(args['short-name'], 12);
+  if (Array.from(name).length <= 12) return name;
   const compact = name.replace(/\s+/g, '');
-  if (compact.length <= 12) return compact;
-  console.warn(`! short_name dipotong jadi "${words[0].slice(0, 12)}"; pakai --short-name untuk label ikon yang lebih pas`);
-  return words[0].slice(0, 12);
+  if (Array.from(compact).length <= 12) return compact;
+  console.warn(`! short_name dipotong jadi "${cut(words[0], 12)}"; pakai --short-name untuk label ikon yang lebih pas`);
+  return cut(words[0], 12);
 }
 const V = {
   SLUG: slug,
@@ -86,8 +88,8 @@ const V = {
   // short_name PWA: maksimal 12 huruf supaya tidak terpotong di bawah ikon (bisa diatur dengan --short-name)
   SHORT_NAME: shortName(),
   EMOJI: args.emoji,
-  TAGLINE: args.tagline.trim(),
-  DESCRIPTION: args.description.trim(),
+  TAGLINE: args.tagline,
+  DESCRIPTION: args.description,
   KEYWORDS: args.keywords || `game anak, game edukasi, ${name.toLowerCase()}, game web anak, game gratis`,
   TITLE_SUFFIX: args['title-suffix'] || 'Game Seru untuk Anak',
   URL: `${SITE}/${slug}/`,

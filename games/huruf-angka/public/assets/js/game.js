@@ -24,7 +24,7 @@ const LETTERS = [
   glyph, say, pic,
   // Q tidak punya kata benda sehari-hari yang akrab untuk balita: cukup sebut hurufnya.
   reveal: glyph === 'Q' ? `${say}! Pintar!` : `${say}. ${word}!`,
-  label: glyph === 'Q' ? 'Pintar!' : `${glyph}, ${word}!`,
+  label: glyph === 'Q' ? 'Q! Pintar! ⭐' : `${glyph}, ${word}!`,
 }));
 const COUNT_PICS = ['🐥','🍎','⭐','🐟','🎈','🍓','🐞','🌸','🍪','🚗'];
 const NUM_WORDS = ['satu','dua','tiga','empat','lima','enam','tujuh','delapan','sembilan','sepuluh'];
@@ -186,9 +186,11 @@ function start(set, game){
   const n = game === 'kenal' ? 1 : LEVELS[game][levelOf(key, game)];
   S = { set, game, key, n, q: 0, mistakes: 0, items };
   if (game === 'kenal') {
-    // Sesi selalu 5 kartu berurutan tanpa melompat dari akhir ke awal: ... U–Y, V–Z, lalu kembali ke A.
+    // Sesi = 5 kartu berurutan. Kalau sisa sesudahnya kurang dari 5, sisa itu ikut sesi ini
+    // (huruf: ... P–T, lalu U–Z berisi 6 kartu), jadi tidak ada sesi yang mengulang huruf. Lalu kembali ke awal.
     const from = Math.min(kenalPos(set), items.length - ROUND); S.from = from;
-    S.targets = Array.from({ length: ROUND }, (_, i) => items[(from + i) % items.length]);
+    const to = items.length - (from + ROUND) < ROUND ? items.length : from + ROUND;
+    S.targets = items.slice(from, to);
   }
   else if (game === 'tebak') S.targets = sample(items, ROUND);
   else {
@@ -211,7 +213,7 @@ function sheet(on){
 }
 
 function dots(){
-  $('#dots').innerHTML = Array.from({ length: ROUND }, (_, i) => `<i class="${i < S.q ? 'done' : i === S.q ? 'now' : ''}"></i>`).join('');
+  $('#dots').innerHTML = Array.from({ length: S.targets.length }, (_, i) => `<i class="${i < S.q ? 'done' : i === S.q ? 'now' : ''}"></i>`).join('');
 }
 
 // Ukuran kartu (dan slot) dari ruang yang tersedia: tinggi papan dikurangi teks soal,
@@ -223,7 +225,8 @@ function sizes(){
   if (S.game === 'kenal') return { size: layout(1, W, H - $('#nav').offsetHeight - rowGap, 260) };
   if (S.game === 'tebak') return { size: layout(S.n, W, H, 180) };
   const slotGap = gapOf(slotsEl);
-  const slotSize = Math.floor(Math.min(110, (W - (S.n - 1) * slotGap) / S.n, H * .22 * 3 / 4));
+  // Slot minimal 44px supaya tetap jelas di layar pendek (papan bisa di-scroll).
+  const slotSize = Math.max(44, Math.floor(Math.min(110, (W - (S.n - 1) * slotGap) / S.n, H * .22 * 3 / 4)));
   H -= slotSize * 4 / 3 + rowGap;
   return { size: layout(S.n, W, H, 160), slotSize };
 }
@@ -337,11 +340,12 @@ function tapOrder(card, item){
 
 function next(){
   S.q++;
-  if (S.q < ROUND) { question(); return; }
+  if (S.q < S.targets.length) { question(); return; }
   dots();
   if (S.game === 'kenal') {
-    kenal[S.set] = S.from + ROUND >= S.items.length ? 0 : S.from + ROUND; save('kenal', kenal);
-    const first = S.targets[0].glyph, last = S.targets[ROUND - 1].glyph;
+    const end = S.from + S.targets.length;
+    kenal[S.set] = end >= S.items.length ? 0 : end; save('kenal', kenal);
+    const first = S.targets[0].glyph, last = S.targets.at(-1).glyph;
     $('#winText').textContent = `Kamu sudah kenalan dengan ${first} sampai ${last}. Dapat 1 bintang!`;
   } else {
     adapt(S.key, S.game, S.mistakes);
@@ -366,7 +370,7 @@ function step(d){
   if (!S || S.game !== 'kenal' || S.locked) return;
   if (d < 0 && S.q > 0) { S.q--; question(); }
   else if (d > 0) {
-    if (S.q < ROUND - 1) { S.q++; question(); }
+    if (S.q < S.targets.length - 1) { S.q++; question(); }
     else { S.locked = true; next(); }
   }
 }

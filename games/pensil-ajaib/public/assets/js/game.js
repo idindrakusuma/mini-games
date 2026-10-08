@@ -120,6 +120,12 @@ function glyphSvg(ch){
 }
 // Label untuk pembaca layar: bedakan huruf besar/kecil ("A besar", "a kecil", "angka 3").
 const labelOf = ch => setOf(ch) === 'angka' ? `angka ${ch}` : `${ch} ${setOf(ch)}`;
+// Tambahkan tanda ✓ ke tombol yang baru selesai, tanpa membangun ulang seluruh grid.
+function markDone(){
+  document.querySelectorAll('#grid .ch').forEach(b => {
+    if (done[b.dataset.ch] && !b.querySelector('.ok')) b.insertAdjacentHTML('beforeend', '<span class="ok" aria-hidden="true">✓</span>');
+  });
+}
 function renderGrid(){
   document.querySelectorAll('.tab').forEach(t => {
     const on = t.dataset.set === tab;
@@ -201,7 +207,7 @@ function close(){
   const ch = T?.ch;
   T = null; cancelAnimationFrame(raf); raf = 0; pointer = null; hush(); fxReset();
   $('#toast').classList.remove('on');
-  play.classList.remove('on'); $('#home').inert = false; renderGrid(); showStars();
+  play.classList.remove('on'); $('#home').inert = false; markDone(); showStars();
   if (ch) document.querySelector(`.ch[data-ch="${ch}"]`)?.focus();   // kembali ke huruf terakhir (scroll ke sana kalau perlu)
 }
 function nextChar(){
@@ -316,7 +322,9 @@ function toBox(e, r = pad.getBoundingClientRect()){
   return { x: (e.clientX - r.left - view.ox) / view.s, y: (e.clientY - r.top - view.oy) / view.s };
 }
 function follow(q){
-  if (!T || T.finished) return;
+  // Setelah satu goresan selesai, jari harus diangkat dulu: sisa gerakan yang sama tidak boleh
+  // langsung "masuk" ke goresan berikutnya walau awalnya dekat (misalnya kaki R dan K).
+  if (!T || T.finished || T.needLift) return;
   const st = T.strokes[T.si];
   if (st.dot) {
     if (Math.hypot(q.x - st.pts[0].x, q.y - st.pts[0].y) < TOL) strokeDone();
@@ -340,7 +348,7 @@ function follow(q){
   if (T.k >= st.pts.length - 1 - Math.round(8 / STEP)) strokeDone();
 }
 function strokeDone(){
-  T.si++; T.k = 0; T.onTrack = false; sStroke(); invalidate();
+  T.si++; T.k = 0; T.onTrack = false; T.needLift = true; sStroke(); invalidate();
   if (T.si < T.strokes.length) return;
   // Selesai satu karakter
   T.finished = true; T.si = T.strokes.length - 1;
@@ -366,7 +374,7 @@ pad.addEventListener('pointerdown', e => {
   // Hanya tombol utama (klik kiri / sentuhan). Jari utama yang baru selalu boleh mengambil alih,
   // jadi kunci tidak bisa macet kalau pointerup sebelumnya hilang. Jari tambahan diabaikan.
   if (!T || e.button !== 0 || (pointer !== null && !e.isPrimary)) return;
-  pointer = e.pointerId; T.onTrack = false; wake();
+  pointer = e.pointerId; T.onTrack = false; T.needLift = false; wake();
   try { pad.setPointerCapture(e.pointerId); } catch (err) { /* pointer sudah tidak aktif: abaikan */ }
   follow(toBox(e));
 });

@@ -21,7 +21,7 @@ Pilih **Huruf** atau **Angka**, lalu pilih mode. Satu sesi berisi 5 kartu tanpa 
 ### 👀 Kenalan
 1. Satu kartu besar tampil lengkap dengan gambarnya, lalu dibacakan ("A. Apel!").
 2. Ketuk ▶ atau geser kartu untuk lanjut, ◀ untuk mundur. Ketuk kartu untuk mendengar lagi.
-3. Setiap sesi berisi 5 kartu berurutan. Sesi berikutnya melanjutkan dari kartu terakhir (A–E, lalu F–J, dan seterusnya).
+3. Setiap sesi berisi 5 kartu berurutan. Sesi berikutnya melanjutkan dari kartu terakhir (A–E, lalu F–J, dan seterusnya). Sesi terakhir huruf berisi U–Z (6 kartu) supaya tidak ada huruf yang diulang, lalu kembali ke A.
 
 ### 🎯 Tebak
 1. Dengarkan soalnya, misalnya "Mana huruf be?". Tombol 🔊 mengulang suara.
