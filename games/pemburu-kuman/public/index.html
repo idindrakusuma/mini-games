@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<!-- Tidak ada fetch/XHR ke luar domain ini (termasuk telemetri model deteksi wajah). -->
-<meta http-equiv="Content-Security-Policy" content="connect-src 'self'">
+<!-- Tidak ada fetch/XHR ke luar domain ini (termasuk telemetri model deteksi wajah). blob: untuk wasm yang sudah diunduh. -->
+<meta http-equiv="Content-Security-Policy" content="connect-src 'self' blob:">
 <title>Pemburu Kuman · Game Cuci Tangan &amp; Sikat Gigi untuk Anak</title>
 <meta name="description" content="Pemburu Kuman: game kamera gratis untuk anak. Usir kuman lucu sambil cuci tangan pakai sabun dan sikat gigi. Berjalan di browser, tanpa install, kamera tidak merekam apa pun.">
 <meta name="author" content="Indra Kusuma">
@@ -93,6 +93,16 @@
       <p>Izinkan kamera di browser lalu coba lagi. Bisa juga main pakai gambar tangan kartun.</p>
       <button class="btn" id="retryCam">Coba lagi</button>
       <button class="btn alt" id="noCam">Main tanpa kamera</button>
+    </div>
+  </div>
+
+  <div class="sheet" id="loadSheet">
+    <div class="panel">
+      <div class="big bounce">🦷</div>
+      <h2>Sebentar ya!</h2>
+      <p>Lagi menyiapkan kamera pencari gigi. Cuma sekali, nanti langsung cepat.</p>
+      <div class="bar" role="progressbar" aria-label="Menyiapkan" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="loadBar"></i></div>
+      <div class="pct" id="loadPct">0%</div>
     </div>
   </div>
 

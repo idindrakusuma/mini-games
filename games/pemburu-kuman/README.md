@@ -51,7 +51,7 @@ Kalau kamera tidak diizinkan atau tidak tersedia, anak tetap bisa main dengan ga
 - Langsung main di browser tanpa install.
 
 ### 🔒 Privasi terjaga
-Kamera hanya dipakai di layar permainan. Deteksi tangan dan gigi berjalan sepenuhnya di perangkat, dan tidak ada foto atau video yang disimpan maupun dikirim ke mana pun. Model deteksi wajah memakai versi MediaPipe yang tidak mengirim metrik pemakaian, dan halaman ini melarang skrip mengirim permintaan ke domain lain (CSP `connect-src 'self'`).
+Kamera hanya dipakai di layar permainan. Deteksi tangan dan gigi berjalan sepenuhnya di perangkat, dan tidak ada foto atau video yang disimpan maupun dikirim ke mana pun. Model deteksi wajah memakai versi MediaPipe yang tidak mengirim metrik pemakaian, dan halaman ini melarang skrip mengirim permintaan ke domain lain (CSP `connect-src 'self' blob:`).
 
 ## Pembuat
 

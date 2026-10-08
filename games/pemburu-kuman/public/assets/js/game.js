@@ -100,19 +100,51 @@ function box(I,x,y,r){
 // Titik bibir bagian dalam (FaceMesh), dari sudut mulut 78 ke sudut mulut 308.
 const LIP_UP=[78,191,80,81,82,13,312,311,310,415,308], LIP_LO=[78,95,88,178,87,14,317,402,318,324,308];
 const vendor = f => new URL('assets/vendor/'+f, document.baseURI).href, MP='mediapipe-0.10.35/';
-let face=null, faceState='idle', faceTs=0, mouth=null, faceSeen=false;
+// Ukuran asli dua file terbesar, untuk progress bar (content-length bisa berupa ukuran terkompresi).
+const WASM_BYTES=11153617, MODEL_BYTES=3758596;
+let face=null, faceState='idle', faceTs=0, faceGot=0, faceStart=0, mouth=null, faceSeen=false;
 const mcv = document.createElement('canvas'), mctx = mcv.getContext('2d',{willReadFrequently:true});
+async function grab(url){
+  const res = await fetch(url);
+  if(!res.ok) throw new Error(res.status+' '+url);
+  if(!res.body){ const b=new Uint8Array(await res.arrayBuffer()); faceGot+=b.length; return b; }
+  const reader=res.body.getReader(), parts=[]; let n=0;
+  for(;;){ const {done,value}=await reader.read(); if(done) break; parts.push(value); n+=value.length; faceGot+=value.length; }
+  const out=new Uint8Array(n); let o=0; for(const p of parts){ out.set(p,o); o+=p.length; }
+  return out;
+}
+// Hanya dipanggil saat mode gigi dipilih, jadi mode tangan tidak pernah mengunduh model.
 async function loadFace(){
   if(faceState!=='idle') return;
-  faceState='loading';
+  faceState='loading'; faceGot=0; faceStart=performance.now();
+  let blobUrl=null;
   try{
     const {FilesetResolver, FaceLandmarker} = await import(vendor(MP+'vision_bundle.mjs'));
     const files = await FilesetResolver.forVisionTasks(vendor(MP+'wasm'));
-    const opts = delegate => ({baseOptions:{modelAssetPath:vendor('face_landmarker-f16-v1.task'), delegate}, runningMode:'VIDEO', numFaces:1});
+    // Hanya varian SIMD yang disimpan; jangan unduh apa pun kalau browser butuh varian lain.
+    if(/nosimd/.test(files.wasmBinaryPath)) throw new Error('no wasm simd');
+    const [wasm, model] = await Promise.all([grab(files.wasmBinaryPath), grab(vendor('face_landmarker-f16-v1.task'))]);
+    files.wasmBinaryPath = blobUrl = URL.createObjectURL(new Blob([wasm], {type:'application/wasm'}));
+    const opts = delegate => ({baseOptions:{modelAssetBuffer:new Uint8Array(model), delegate}, runningMode:'VIDEO', numFaces:1});
     try{ face = await FaceLandmarker.createFromOptions(files, opts('GPU')); }
     catch(e){ face = await FaceLandmarker.createFromOptions(files, opts('CPU')); }
     faceState='ready';
   }catch(e){ face=null; faceState='failed'; }
+  finally{ if(blobUrl) URL.revokeObjectURL(blobUrl); }
+}
+const faceLoading = () => mode==='teeth' && useCam && faceState==='loading';
+// Loader baru muncul kalau unduhan agak lama, supaya tidak berkedip saat file sudah ada di cache.
+let lastPct=-1;
+function showLoader(now){
+  const on = faceLoading() && now-faceStart>300 && !$('#camSheet').classList.contains('on');
+  $('#loadSheet').classList.toggle('on', on);
+  if(!on) return;
+  const pct = Math.min(99, Math.round(faceGot/(WASM_BYTES+MODEL_BYTES)*100));
+  if(pct===lastPct) return;
+  lastPct=pct;
+  $('#loadBar').style.width = pct+'%';
+  $('#loadPct').textContent = pct+'%';
+  $('#loadSheet .bar').setAttribute('aria-valuenow', pct);
 }
 const useFace = () => mode==='teeth' && useCam && faceState==='ready';
 function lipAt(poly,t){
@@ -190,7 +222,9 @@ function analyze(now){
   const Is=integral(skin), clean=new Uint8Array(N); let sc=0;
   for(let y=0;y<H;y++) for(let x=0;x<W;x++){ const i=y*W+x; if(skin[i] && box(Is,x,y,1)>=5){ clean[i]=1; sc++; } }
   mask.fill(0); cand.length=0;
-  if(useFace()){
+  if(faceLoading()){
+    // tunggu model selesai diunduh; loader yang tampil
+  } else if(useFace()){
     if(analyzeMouth(s)) cand.push(0);
     if(mouth) for(const g of germs){
       if(g.state!=='alive') continue;
@@ -409,7 +443,8 @@ function frame(now){
   parts = parts.filter(p=>p.life<p.max);
 
   // instructions
-  if(!round || round.done || $('#camSheet').classList.contains('on')) setTip('');
+  showLoader(now);
+  if(!round || round.done || $('#camSheet').classList.contains('on') || $('#loadSheet').classList.contains('on')) setTip('');
   else if(!s.ready) setTip('Sebentar, kamera lagi siap-siap…');
   else if(!visible && useFace() && !faceSeen) setTip('Lihat ke kamera, ya! 🙂<small>Wajahmu harus kelihatan</small>');
   else if(!visible) setTip(mode==='hands'
@@ -449,7 +484,7 @@ function startPlay(m){
 }
 function goHome(){
   stopCam(); useCam=false; screen='home'; round=null;
-  play.classList.remove('on'); $('#camSheet').classList.remove('on'); $('#winSheet').classList.remove('on');
+  play.classList.remove('on'); $('#camSheet').classList.remove('on'); $('#winSheet').classList.remove('on'); $('#loadSheet').classList.remove('on');
   document.getElementById('home').style.display='';
 }
 

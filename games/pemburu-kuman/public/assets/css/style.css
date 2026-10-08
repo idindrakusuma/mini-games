@@ -106,4 +106,10 @@ h1{
 .btn.alt{ background:var(--water); }
 .btn:active{ transform:translateY(4px); box-shadow:0 1px 0 rgba(27,42,107,.25); }
 
-@media (prefers-reduced-motion: reduce){ .choice{ transition:none; } }
+.bar{ height:22px; border-radius:999px; background:rgba(71,201,229,.25); overflow:hidden; }
+.bar i{ display:block; height:100%; width:0; border-radius:999px; background:var(--water); transition:width .3s; }
+.pct{ margin-top:8px; font-size:1.2rem; font-weight:800; color:var(--muted); }
+.bounce{ animation:bounce 1s ease-in-out infinite; }
+@keyframes bounce{ 50%{ transform:translateY(-10px) rotate(-6deg); } }
+
+@media (prefers-reduced-motion: reduce){ .choice, .bar i{ transition:none; } .bounce{ animation:none; } }
