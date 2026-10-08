@@ -161,7 +161,6 @@ const card = `    <li>
         <img src="${slug}/assets/icons/icon-192.png" alt="" width="96" height="96">
         <b>${esc.html(name)}</b>
         <small>${esc.html(V.TAGLINE)}</small>
-        <span class="play">Main! ▶</span>
       </a>
     </li>
 `;

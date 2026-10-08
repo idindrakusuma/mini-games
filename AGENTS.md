@@ -54,6 +54,7 @@ npm run pemburu-kuman:images   # generate ulang og-image & ikon (butuh Playwrigh
 npm run landing-page:images
 npm run huruf-angka:images
 npm run pensil-ajaib:images
+npm run cocok-bentuk:images
 npm run pemburu-kuman:vendor   # unduh ulang MediaPipe Face Landmarker untuk mode gigi
 ```
 

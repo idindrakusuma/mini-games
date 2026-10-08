@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cocok Bentuk · Game Mengenal Bentuk &amp; Warna untuk Anak</title>
+<meta name="description" content="Game cocok bentuk dan warna untuk anak. Seret bentuk lucu ke rumahnya sambil belajar nama bentuk dan warna. Gratis, langsung main di browser.">
+<meta name="author" content="Indra Kusuma">
+<meta name="keywords" content="game anak, cocok bentuk, mengenal bentuk, mengenal warna, game edukasi, game balita">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#DDF6E3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#103A62" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://mini-games.indrakusuma.dev/cocok-bentuk/">
+
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Cocok Bentuk">
+<meta property="og:locale" content="id_ID">
+<meta property="og:url" content="https://mini-games.indrakusuma.dev/cocok-bentuk/">
+<meta property="og:title" content="Cocok Bentuk · Game Mengenal Bentuk &amp; Warna untuk Anak">
+<meta property="og:description" content="Game cocok bentuk dan warna untuk anak. Seret bentuk lucu ke rumahnya sambil belajar nama bentuk dan warna. Gratis, langsung main di browser.">
+<meta property="og:image" content="https://mini-games.indrakusuma.dev/cocok-bentuk/assets/images/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Cocok Bentuk: Yuk, pasangkan bentuk &amp; warna!">
+<meta property="article:author" content="Indra Kusuma">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Cocok Bentuk · Game Mengenal Bentuk &amp; Warna untuk Anak">
+<meta name="twitter:description" content="Game cocok bentuk dan warna untuk anak. Seret bentuk lucu ke rumahnya sambil belajar nama bentuk dan warna. Gratis, langsung main di browser.">
+<meta name="twitter:image" content="https://mini-games.indrakusuma.dev/cocok-bentuk/assets/images/og-image.png">
+<meta name="twitter:image:alt" content="Cocok Bentuk: Yuk, pasangkan bentuk &amp; warna!">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": ["WebApplication", "VideoGame"],
+  "name": "Cocok Bentuk",
+  "url": "https://mini-games.indrakusuma.dev/cocok-bentuk/",
+  "image": "https://mini-games.indrakusuma.dev/cocok-bentuk/assets/images/og-image.png",
+  "description": "Game cocok bentuk dan warna untuk anak. Seret bentuk lucu ke rumahnya sambil belajar nama bentuk dan warna. Gratis, langsung main di browser.",
+  "inLanguage": "id",
+  "applicationCategory": "GameApplication",
+  "genre": ["Kids", "Casual"],
+  "operatingSystem": "Any (web browser)",
+  "isAccessibleForFree": true,
+  "audience": { "@type": "PeopleAudience", "suggestedMinAge": 3, "suggestedMaxAge": 10 },
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "IDR" },
+  "isPartOf": { "@type": "WebSite", "name": "Taman Bermain", "url": "https://mini-games.indrakusuma.dev/" },
+  "author": { "@type": "Person", "name": "Indra Kusuma", "url": "https://indrakusuma.dev" }
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<main id="home">
+  <canvas class="mascot" id="hero" aria-hidden="true"></canvas>
+  <h1>Cocok Bentuk</h1>
+  <p class="lead">Yuk, pasangkan bentuk &amp; warna!</p>
+  <button class="btn big" id="startBtn">Main! ▶</button>
+  <div class="stars" id="starsHome">⭐ 0 bintang</div>
+  <p class="back"><a href="../">← Taman Bermain</a></p>
+  <p class="credit">Dibuat oleh <a href="https://indrakusuma.dev" rel="author">Indra Kusuma</a></p>
+</main>
+
+<section id="play" aria-label="Main" tabindex="-1">
+  <canvas id="stage"></canvas>
+  <div class="hud">
+    <button class="round" id="homeBtn" aria-label="Kembali ke awal">🏠</button>
+    <div class="counter" id="counter"></div>
+    <span class="round spacer" aria-hidden="true"></span>
+  </div>
+  <div class="tip" id="tip"></div>
+
+  <div class="sheet" id="winSheet">
+    <div class="panel">
+      <div class="big">🌟</div>
+      <h2>Hore, hebat!</h2>
+      <p id="winText">Kamu dapat 1 bintang!</p>
+      <button class="btn" id="againBtn">Main lagi</button>
+      <button class="btn alt" id="doneBtn">Selesai</button>
+    </div>
+  </div>
+</section>
+
+<script src="assets/js/shapes.js"></script>
+<script src="assets/js/game.js"></script>
+</body>
+</html>

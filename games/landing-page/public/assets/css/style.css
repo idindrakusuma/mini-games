@@ -53,28 +53,26 @@ main{
 @media (prefers-color-scheme: dark){ :root .hero h1{ text-shadow:0 5px 0 rgba(0,0,0,.25); } }
 .lead{ font-size:clamp(20px, 5vw, 26px); color:var(--muted); margin:0 0 24px; font-weight:500; }
 
+/* Kartu ringkas: 2 kolom di HP (juga di layar 320px), lebih banyak kolom di layar lebar. */
 .games{
-  list-style:none; margin:0; padding:0; display:grid; gap:18px;
-  grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));
+  list-style:none; margin:0; padding:0; display:grid; gap:14px;
+  grid-template-columns:repeat(auto-fill, minmax(136px, 1fr));
 }
+@media (min-width:600px){ .games{ gap:18px; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); } }
 .card{
   position:relative; height:100%; display:flex; flex-direction:column; align-items:center; gap:4px;
-  padding:22px 18px 20px; border-radius:30px; background:var(--card); text-decoration:none;
+  padding:16px 10px 16px; border-radius:26px; background:var(--card); text-decoration:none;
   border:4px solid var(--accent, var(--water)); box-shadow:0 8px 0 var(--shadow);
   transition:transform .15s ease, box-shadow .15s ease;
 }
 a.card:hover{ transform:translateY(-4px) rotate(-1deg); box-shadow:0 12px 0 var(--shadow); }
 a.card:active{ transform:translateY(5px); box-shadow:0 3px 0 var(--shadow); }
 .card img, .card .ico{
-  width:96px; height:96px; border-radius:26px; display:grid; place-items:center; font-size:58px;
+  width:clamp(72px, 22vw, 96px); height:clamp(72px, 22vw, 96px); border-radius:22px; display:grid; place-items:center; font-size:clamp(44px, 13vw, 58px);
   animation:bob 2.6s ease-in-out infinite;
 }
-.card b{ font-size:28px; line-height:1.1; margin-top:8px; }
-.card small{ font-size:18px; line-height:1.25; color:var(--muted); flex:1; }
-.play{
-  margin-top:12px; font-weight:800; font-size:22px; border-radius:999px; padding:6px 26px;
-  background:var(--accent, var(--water)); color:#1B2A6B; box-shadow:0 5px 0 rgba(27,42,107,.22);
-}
+.card b{ font-size:clamp(19px, 5.4vw, 26px); line-height:1.1; margin-top:8px; }
+.card small{ font-size:clamp(14px, 3.9vw, 17px); line-height:1.25; color:var(--muted); }
 .card.soap{ --accent:var(--soap); }
 .card.sun{ --accent:var(--sun); }
 .card.leaf{ --accent:var(--leaf); }
@@ -82,7 +80,6 @@ a.card:active{ transform:translateY(5px); box-shadow:0 3px 0 var(--shadow); }
 .card.grape{ --accent:var(--grape); }
 .card.soon{ --accent:var(--soon); border-style:dashed; box-shadow:none; opacity:.85; }
 .card.soon .ico{ background:var(--soon); filter:grayscale(.3); animation:none; }
-.card.soon .play{ background:var(--soon); color:var(--muted); box-shadow:none; }
 @keyframes bob{ 50%{ transform:translateY(-6px) rotate(3deg); } }
 
 .note{ margin:30px auto 6px; max-width:520px; font-size:16px; color:var(--muted); }
