@@ -26,7 +26,7 @@ Pilih **Huruf** atau **Angka**, lalu pilih mode. Satu sesi berisi 5 kartu tanpa 
 ### 🎯 Tebak
 1. Dengarkan soalnya, misalnya "Mana huruf be?". Tombol 🔊 mengulang suara.
 2. Ketuk kartu yang benar.
-3. Kalau benar, gambar pendamping muncul ("B, Bola!" ⚽, atau tiga 🐥 untuk angka 3).
+3. Kalau benar, gambar pendamping muncul ("B, Bola!" ⚽, atau tiga ⭐ untuk angka 3).
 
 ### 🧩 Urutkan
 1. Beberapa kartu berurutan muncul teracak.

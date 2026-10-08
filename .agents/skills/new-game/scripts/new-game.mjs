@@ -169,7 +169,9 @@ else fail('tidak menemukan daftar game di landing page');
 const sitemapPath = path.join(root, 'games/landing-page/public/sitemap.xml');
 const sitemapSrc = fs.readFileSync(sitemapPath, 'utf8');
 if (!sitemapSrc.includes('</urlset>')) fail('sitemap.xml tidak punya </urlset>');
-const sitemap = sitemapSrc.replace('</urlset>', () => `  <url>
+// Landing page ikut berubah (ada kartu baru): perbarui juga lastmod halaman utama.
+const sitemap = sitemapSrc.replace(/(<loc>https:\/\/mini-games\.indrakusuma\.dev\/<\/loc>\s*<lastmod>)[^<]*(<\/lastmod>)/, (m, a, b) => a + today + b)
+  .replace('</urlset>', () => `  <url>
     <loc>${V.URL}</loc>
     <lastmod>${today}</lastmod>
     <changefreq>monthly</changefreq>

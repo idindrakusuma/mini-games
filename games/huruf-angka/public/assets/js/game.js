@@ -8,7 +8,8 @@ const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { c
 const sample = (a, n) => shuffle(a).slice(0, n);
 const STORE = 'hurufAngka';
 const ROUND = 5;
-const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+// Dibaca setiap kali dipakai, jadi pengaturan "kurangi gerakan" yang diubah di tengah sesi langsung berlaku.
+const motionMQ = matchMedia('(prefers-reduced-motion: reduce)'), reducedMotion = () => motionMQ.matches;
 
 /* ---------- Data ---------- */
 // [huruf, cara baca, kata, gambar]
@@ -147,7 +148,7 @@ let parts = [], fxRaf = 0;
 function fxClear(){ fctx.save(); fctx.setTransform(1,0,0,1,0,0); fctx.clearRect(0, 0, fx.width, fx.height); fctx.restore(); }
 function fxReset(){ parts = []; cancelAnimationFrame(fxRaf); fxRaf = 0; fxClear(); }
 function burst(x, y, n = 36){
-  if (reducedMotion) return;
+  if (reducedMotion()) return;
   const dpr = Math.min(2, devicePixelRatio || 1);
   const fw = Math.round(fx.clientWidth * dpr), fh = Math.round(fx.clientHeight * dpr);
   if (fx.width !== fw || fx.height !== fh) { fx.width = fw; fx.height = fh; fctx.setTransform(dpr,0,0,dpr,0,0); }
@@ -383,7 +384,10 @@ $('#nextBtn').addEventListener('click', () => step(1));
 let sx = null, sid = null, swipedAt = -1e9;
 // Jari pertama (pointer utama) selalu memulai geseran baru, jadi pelacakan tidak bisa macet
 // kalau pointerup sebelumnya hilang (misalnya dilepas di luar jendela). Jari tambahan diabaikan.
-cardsEl.addEventListener('pointerdown', e => { if (sid !== null && !e.isPrimary) return; sx = e.clientX; sid = e.pointerId; });
+cardsEl.addEventListener('pointerdown', e => {
+  if (S?.game !== 'kenal' || (sid !== null && !e.isPrimary)) return;   // geser hanya dipakai di Kenalan
+  sx = e.clientX; sid = e.pointerId;
+});
 // pointerup/pointercancel didengarkan di window: jari bisa dilepas di luar kartu.
 addEventListener('pointerup', e => {
   if (e.pointerId !== sid) return; const dx = e.clientX - sx; sx = sid = null;

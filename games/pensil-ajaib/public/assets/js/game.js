@@ -11,7 +11,8 @@ const TOL = 30;                   // toleransi jarak jari ke jalur (lebar, untuk
 const AHEAD = 20;                 // berapa titik ke depan yang boleh "dikejar" jari (40 satuan)
 const MARGIN = 15;                // ruang di atas garis atas & di bawah ekor bawah (satuan kotak)
 const REENTRY = 6;                // masuk lagi ke jalur hanya di dekat titik hijau (12 satuan ke depan)
-const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+// Dibaca setiap kali dipakai, jadi pengaturan "kurangi gerakan" yang diubah di tengah sesi langsung berlaku.
+const motionMQ = matchMedia('(prefers-reduced-motion: reduce)'), reducedMotion = () => motionMQ.matches;
 
 /* ---------- Data ---------- */
 const SETS = {
@@ -304,11 +305,11 @@ function draw(now){
   const p = T.strokes[T.si].pts[T.k];
   ctx.setTransform(s * dpr, 0, 0, s * dpr, ox * dpr, oy * dpr);
   // Denyut berhenti setelah 6 detik tanpa sentuhan (hemat baterai); sentuhan berikutnya menyalakannya lagi.
-  const idle = now - lastInput > 6000, pulse = reducedMotion || idle ? 0 : (Math.sin(now / 250) + 1) / 2;
+  const idle = now - lastInput > 6000, pulse = reducedMotion() || idle ? 0 : (Math.sin(now / 250) + 1) / 2;
   ctx.fillStyle = 'rgba(63,191,98,.25)'; ctx.beginPath(); ctx.arc(p.x, p.y, 13 + pulse * 7, 0, 7); ctx.fill();
   ctx.fillStyle = '#3FBF62'; ctx.beginPath(); ctx.arc(p.x, p.y, 10, 0, 7); ctx.fill();
   ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p.x, p.y, 3.5, 0, 7); ctx.fill();
-  if (!reducedMotion && !idle) redraw();   // titik berdenyut: lanjutkan animasi (hanya menyalin lapisan statis)
+  if (!reducedMotion() && !idle) redraw();   // titik berdenyut: lanjutkan animasi (hanya menyalin lapisan statis)
 }
 let rainbowGrad = null;   // dibuat sekali, dipakai ulang setiap gambar
 function rainbow(){
@@ -364,16 +365,22 @@ function strokeDone(){
   if (pending.size >= PER_STAR) {
     pending.clear(); save('pending', []);
     stars++; save('stars', stars);
+    // Sengaja tidak dibatalkan saat ▶/↺: hadiah tetap terlihat ~2 detik walau anak langsung lanjut.
     toast('⭐ +1 bintang!');
   }
 }
 
 // Hanya satu jari yang menulis. Sentuhan lain (telapak tangan, jari kedua) diabaikan.
-let pointer = null;
+let pointer = null, pointerType = '';
 pad.addEventListener('pointerdown', e => {
-  // Hanya tombol utama (klik kiri / sentuhan). Jari utama yang baru selalu boleh mengambil alih,
-  // jadi kunci tidak bisa macet kalau pointerup sebelumnya hilang. Jari tambahan diabaikan.
-  if (!T || e.button !== 0 || (pointer !== null && !e.isPrimary)) return;
+  // Hanya tombol utama (klik kiri / sentuhan / pena).
+  if (!T || e.button !== 0) return;
+  // Sentuhan selebar telapak tangan diabaikan (jika browser melaporkan ukuran sentuhan).
+  if (e.pointerType === 'touch' && (e.width > 48 || e.height > 48)) return;
+  // Pointer utama baru boleh mengambil alih kunci (supaya tidak macet kalau pointerup hilang),
+  // tapi sentuhan tidak boleh merebut dari pena (telapak tangan saat menulis dengan stylus).
+  if (pointer !== null && (!e.isPrimary || (pointerType === 'pen' && e.pointerType !== 'pen'))) return;
+  pointerType = e.pointerType;
   pointer = e.pointerId; T.onTrack = false; T.needLift = false; wake();
   try { pad.setPointerCapture(e.pointerId); } catch (err) { /* pointer sudah tidak aktif: abaikan */ }
   follow(toBox(e));
@@ -407,7 +414,7 @@ let parts = [], fxRaf = 0;
 function fxClear(){ fctx.save(); fctx.setTransform(1,0,0,1,0,0); fctx.clearRect(0, 0, fx.width, fx.height); fctx.restore(); }
 function fxReset(){ parts = []; cancelAnimationFrame(fxRaf); fxRaf = 0; fxClear(); }
 function burst(x, y, n = 36){
-  if (reducedMotion) return;
+  if (reducedMotion()) return;
   const dpr = Math.min(2, devicePixelRatio || 1);
   const fw = Math.round(fx.clientWidth * dpr), fh = Math.round(fx.clientHeight * dpr);
   if (fx.width !== fw || fx.height !== fh) { fx.width = fw; fx.height = fh; fctx.setTransform(dpr,0,0,dpr,0,0); }
