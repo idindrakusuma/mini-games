@@ -36,6 +36,7 @@ vercel.json
 - **`localStorage`**: semua game berbagi satu domain, jadi key wajib diberi prefix nama game, misalnya `pemburuKuman.stars`.
 - **PWA per game**: tiap game punya `site.webmanifest` sendiri dengan `start_url` dan `scope` `"./"`, dan ikon dengan path relatif.
 - **SEO**: URL canonical, `og:url`, dan `og:image` memakai URL lengkap `https://mini-games.indrakusuma.dev/<nama-game>/...`. `robots.txt` dan `sitemap.xml` hanya ada satu, di `games/landing-page/public/`.
+- **Cache**: CSS/JS selalu divalidasi ulang ke server (`max-age=0`), sedangkan gambar dan ikon di `assets/images|icons/` di-cache 1 hari. Kalau mengganti gambar dengan nama file yang sama, tambahkan `?v=N` di referensinya.
 - Nama folder game memakai **kebab-case** dan langsung menjadi path URL-nya.
 
 ## Menambah game baru
