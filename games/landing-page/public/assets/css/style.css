@@ -4,14 +4,10 @@
   --cloud:rgba(255,255,255,.85); --soon:#E6EEF5; --shadow:rgba(27,42,107,.22);
 }
 @media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
+  :root{
     --bg:#103A62; --card:#1B4D7E; --text:#FFFDF7; --muted:#BFE3F5;
     --cloud:rgba(255,255,255,.14); --soon:#244F7A; --shadow:rgba(0,0,0,.35);
   }
-}
-:root[data-theme="dark"]{
-  --bg:#103A62; --card:#1B4D7E; --text:#FFFDF7; --muted:#BFE3F5;
-  --cloud:rgba(255,255,255,.14); --soon:#244F7A; --shadow:rgba(0,0,0,.35);
 }
 *,*::before,*::after{ box-sizing:border-box; }
 html{ min-height:100%; }
@@ -54,8 +50,7 @@ main{
   font-size:clamp(44px, 12vw, 76px); line-height:1; margin:10px 0 8px; font-weight:800;
   text-shadow:0 5px 0 rgba(255,255,255,.65);
 }
-@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .hero h1{ text-shadow:0 5px 0 rgba(0,0,0,.25); } }
-:root[data-theme="dark"] .hero h1{ text-shadow:0 5px 0 rgba(0,0,0,.25); }
+@media (prefers-color-scheme: dark){ :root .hero h1{ text-shadow:0 5px 0 rgba(0,0,0,.25); } }
 .lead{ font-size:clamp(20px, 5vw, 26px); color:var(--muted); margin:0 0 24px; font-weight:500; }
 
 .games{

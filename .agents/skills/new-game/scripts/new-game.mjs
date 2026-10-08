@@ -125,6 +125,10 @@ function fill(text, file) {
   }
   return out + text.slice(last).replace(PH, x => fillOne(x, file));
 }
+// Di .mjs nilai berada di dalam template literal, jadi "<\/" yang dibuat esc.js kembali jadi "</" saat
+// dievaluasi. Ganti setiap "<" dengan \\u003c: tetap "<" di string JS halaman, tapi tidak pernah
+// bisa membentuk "</script" di HTML yang disusun generator.
+const mjsSafe = s => s.replace(/</g, '\\\\u003c');
 function fillOne(m, file) {
   const k = m.slice(2, -2);
   const kind = file.endsWith('.webmanifest') ? 'json' : file.endsWith('.js') || file.endsWith('.mjs') ? 'js' : 'html';
@@ -132,10 +136,10 @@ function fillOne(m, file) {
   if (!(k in vals)) fail(`placeholder tidak dikenal ${m} di ${file}`);
   if (k === 'OG_TITLE_HTML') return kind === 'js' ? esc.js(vals[k]) : vals[k];
   // Emoji untuk string JS di dalam template literal (fillText(...) di generator gambar): literal JSON yang aman.
-  // "<" jadi \u003c di string JS halaman, supaya "</script>" tidak bisa menutup tag script di generator.
-  if (k === 'EMOJI_JS') return esc.js(JSON.stringify(V.EMOJI).replace(/</g, '\\u003c'));
+  if (k === 'EMOJI_JS') return mjsSafe(esc.js(JSON.stringify(V.EMOJI)));
   // .mjs generator menaruh nilai di dalam HTML di dalam template literal JS
-  return kind === 'json' ? esc.json(vals[k]) : kind === 'js' ? esc.js(file.endsWith('.mjs') ? esc.html(vals[k]) : vals[k]) : esc.html(vals[k]);
+  if (file.endsWith('.mjs')) return mjsSafe(esc.js(esc.html(vals[k])));
+  return kind === 'json' ? esc.json(vals[k]) : kind === 'js' ? esc.js(vals[k]) : esc.html(vals[k]);
 }
 
 // ---------- 1. siapkan semua isi di memori dulu ----------

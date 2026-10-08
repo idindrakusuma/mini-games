@@ -119,6 +119,7 @@ function fit(n, W, H, max, gap){
   for (let rows = 1; rows <= n; rows++) {
     const cols = Math.ceil(n / rows);
     if (Math.ceil(n / cols) !== rows) continue;
+    if (n - (rows - 1) * cols < cols - 1) continue;   // baris terakhir kurang lebih dari satu kartu (mis. 7 → 3+3+1)
     const w = Math.min(max, (W - (cols - 1) * gap) / cols, ((H - (rows - 1) * gap) / rows) * 3 / 4);
     // Baris lebih sedikit lebih enak dilihat; tambah baris hanya kalau kartu jadi jauh lebih besar.
     if (w > best.size * 1.25) best = { size: Math.floor(w), cols };

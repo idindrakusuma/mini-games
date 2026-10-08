@@ -383,10 +383,10 @@ pad.addEventListener('pointerdown', e => {
   // Hanya tombol utama (klik kiri / sentuhan / pena).
   if (!T || e.button !== 0) return;
   // Sentuhan seukuran telapak tangan diabaikan (jika browser melaporkan ukuran sentuhan).
-  // Pakai LUAS kontak (> 60x60 = 3600px²), bukan satu sisi: jari balita yang ditekan rata dan agak
-  // lonjong (mis. 65x35 = 2275) tetap diterima, sedangkan sisi tangan (120x40 = 4800) dan telapak
-  // tangan (80x80) ditolak. Browser yang tidak melaporkan ukuran memberi 1x1, jadi selalu diterima.
-  if (e.pointerType === 'touch' && e.width * e.height > 3600) return;
+  // Tolak kalau LUAS kontak > 60x60 (3600px², telapak tangan) ATAU salah satu sisi > 90px (sisi tangan
+  // yang tipis-panjang, mis. 130x27). Jari balita yang ditekan rata dan agak lonjong (mis. 65x35)
+  // tetap diterima. Browser yang tidak melaporkan ukuran memberi 1x1, jadi selalu diterima.
+  if (e.pointerType === 'touch' && (e.width * e.height > 3600 || Math.max(e.width, e.height) > 90)) return;
   // Pointer utama baru boleh mengambil alih kunci (supaya tidak macet kalau pointerup hilang),
   // tapi sentuhan tidak boleh merebut dari pena (telapak tangan saat menulis dengan stylus).
   if (pointer !== null && (!e.isPrimary || (pointerType === 'pen' && e.pointerType !== 'pen'))) return;
