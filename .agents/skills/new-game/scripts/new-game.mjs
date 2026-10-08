@@ -200,7 +200,7 @@ const agentsPath = path.join(root, 'AGENTS.md');
 let agents = fs.existsSync(agentsPath) ? fs.readFileSync(agentsPath, 'utf8') : null;
 if (agents) {
   const lines = agents.split('\n'), lastImg = lines.findLastIndex(l => /^npm run [\w-]+:images\b/.test(l));
-  if (lastImg >= 0) { lines.splice(lastImg + 1, 0, `npm run ${slug}:images`.padEnd(31) + '# og-image & ikon'); agents = lines.join('\n'); }
+  if (lastImg >= 0) { lines.splice(lastImg + 1, 0, `npm run ${slug}:images`); agents = lines.join('\n'); }
   else { console.warn('! daftar perintah :images di AGENTS.md tidak ditemukan, tambahkan secara manual'); agents = null; }
 }
 

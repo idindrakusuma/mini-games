@@ -251,6 +251,7 @@ function refit(){
 new ResizeObserver(refit).observe($('.board'));
 // Font Baloo 2 dimuat belakangan (display=swap) dan bisa membuat teks soal berganti baris: ukur ulang.
 document.fonts?.addEventListener?.('loadingdone', refit);
+document.fonts?.ready.then(refit);   // juga untuk browser tanpa event loadingdone
 
 function question(){
   clearTimeout(timer); dots();
