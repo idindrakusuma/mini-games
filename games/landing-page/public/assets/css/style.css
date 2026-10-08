@@ -25,11 +25,6 @@ a:focus-visible{ outline:4px solid var(--sun); outline-offset:4px; }
 
 /* ---------- Langit ---------- */
 .sky{ position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:0; }
-.sun{
-  position:absolute; top:-60px; right:-60px; width:150px; height:150px; border-radius:50%;
-  background:var(--sun); box-shadow:0 0 0 18px rgba(255,210,63,.35), 0 0 0 38px rgba(255,210,63,.15);
-  animation:spin-pulse 6s ease-in-out infinite;
-}
 .cloud{
   position:absolute; height:38px; border-radius:40px; background:var(--cloud);
   animation:drift 28s linear infinite;
@@ -41,7 +36,13 @@ a:focus-visible{ outline:4px solid var(--sun); outline-offset:4px; }
 .c2{ width:90px; top:46%; left:-130px; animation-duration:36s; animation-delay:-14s; }
 .c3{ width:130px; top:78%; left:-130px; animation-duration:44s; animation-delay:-30s; }
 @keyframes drift{ to{ transform:translateX(calc(100vw + 160px)); } }
-@keyframes spin-pulse{ 50%{ transform:scale(1.06); } }
+
+/* ---------- Matahari ---------- */
+.sun{ display:block; width:clamp(120px, 34vw, 160px); height:auto; margin:0 auto; overflow:visible; }
+.sun .rays{ transform-origin:0 0; animation:spin 24s linear infinite; }
+.sun .eyes{ transform-origin:0 -15px; animation:blink 5s infinite; }
+@keyframes spin{ to{ transform:rotate(360deg); } }
+@keyframes blink{ 0%,92%,100%{ transform:scaleY(1); } 95%{ transform:scaleY(.1); } }
 
 /* ---------- Isi ---------- */
 main{
@@ -50,7 +51,7 @@ main{
   text-align:center;
 }
 .hero h1{
-  font-size:clamp(44px, 12vw, 76px); line-height:1; margin:18px 0 8px; font-weight:800;
+  font-size:clamp(44px, 12vw, 76px); line-height:1; margin:10px 0 8px; font-weight:800;
   text-shadow:0 5px 0 rgba(255,255,255,.65);
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .hero h1{ text-shadow:0 5px 0 rgba(0,0,0,.25); } }
