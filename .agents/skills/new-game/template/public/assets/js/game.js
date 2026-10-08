@@ -53,13 +53,13 @@ function spawn(){
 function setCounter(){ $('#counter').textContent = `{{EMOJI}} ${left}`; }
 
 function start(){
-  play.classList.add('on'); $('#winSheet').classList.remove('on');
+  play.classList.add('on'); $('#winSheet').classList.remove('on'); clearTimeout(winTimer);
   resize(); items = []; left = GOAL; setCounter();
   for(let i = 0; i < 3; i++) spawn();
   $('#tip').textContent = 'Ketuk gelembungnya!';
   running = true; last = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(loop);
 }
-function stop(){ running = false; cancelAnimationFrame(raf); play.classList.remove('on'); showStars(); }
+function stop(){ running = false; clearTimeout(winTimer); cancelAnimationFrame(raf); play.classList.remove('on'); showStars(); }
 
 function loop(now){
   const dt = Math.min(.05, (now - last) / 1000); last = now;
@@ -67,7 +67,7 @@ function loop(now){
   for(const it of items){
     if(it.pop){ it.pop += dt * 4; }
     else { it.y -= it.vy * dt; if(it.y < -it.r) it.y = CH + it.r; }
-    const wob = Math.sin(now / 300 + it.ph) * 6, s = it.pop ? 1 + it.pop : 1;
+    const wob = it.wob = Math.sin(now / 300 + it.ph) * 6, s = it.pop ? 1 + it.pop : 1;   // wob dipakai juga untuk hit test
     ctx.globalAlpha = it.pop ? Math.max(0, 1 - it.pop) : 1;
     ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.strokeStyle = 'rgba(255,255,255,.95)'; ctx.lineWidth = 4;
     ctx.beginPath(); ctx.arc(it.x + wob, it.y, it.r * s, 0, 7); ctx.fill(); ctx.stroke();
@@ -82,16 +82,17 @@ function loop(now){
 cv.addEventListener('pointerdown', e => {
   if(!running || left <= 0) return;
   const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
-  const hit = items.find(it => !it.pop && Math.hypot(it.x - x, it.y - y) < it.r + 16);
+  const hit = items.find(it => !it.pop && Math.hypot(it.x + (it.wob || 0) - x, it.y - y) < it.r + 16);
   if(!hit) return;
   hit.pop = .001; sPop(); left--; setCounter();
   if(left === 0){ win(); return; }
   if(items.filter(it => !it.pop).length < Math.min(3, left)) spawn();
 });
 
+let winTimer = 0;
 function win(){
   stars++; saveStars(); sWin(); $('#tip').textContent = '';
-  setTimeout(() => $('#winSheet').classList.add('on'), 600);
+  winTimer = setTimeout(() => $('#winSheet').classList.add('on'), 600);
 }
 
 /* ---------- Tombol ---------- */

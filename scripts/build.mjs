@@ -18,16 +18,17 @@ const games = fs.readdirSync(gamesDir, { withFileTypes: true })
   .map(d => d.name)
   .sort();
 
+// Cek bentrok sebelum menyalin apa pun, supaya dist/ tidak tertinggal setengah tergabung.
+for (const name of games) {
+  if (name !== LANDING && fs.existsSync(path.join(gamesDir, LANDING, 'public', name))) {
+    throw new Error(`Bentrok: games/${LANDING}/public/${name} menimpa game ${name}`);
+  }
+}
+
 for (const name of games) {
   const src = path.join(gamesDir, name, 'public');
   if (!fs.existsSync(src)) throw new Error(`games/${name} tidak punya folder public/`);
   const dest = name === LANDING ? dist : path.join(dist, name);
   fs.cpSync(src, dest, { recursive: true });
   console.log(`games/${name}/public → ${path.relative(root, dest) || 'dist'}/`);
-}
-
-for (const name of games) {
-  if (name !== LANDING && fs.existsSync(path.join(gamesDir, LANDING, 'public', name))) {
-    throw new Error(`Bentrok: games/${LANDING}/public/${name} menimpa game ${name}`);
-  }
 }

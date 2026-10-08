@@ -41,7 +41,7 @@
       ]
     },
     {
-      "source": "/(.*)site.webmanifest",
+      "source": "/(.*)site\\.webmanifest",
       "headers": [
         {
           "key": "Content-Type",

@@ -121,7 +121,8 @@ renderGrid();
 const play = $('#play'), pad = $('#pad'), ctx = pad.getContext('2d');
 let T = null;          // { ch, strokes, si (goresan aktif), k (titik terjauh), finished, onTrack }
 let view = { s: 1, ox: 0, oy: 0 }, raf = 0;
-const ACCENT = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#B98CFF';
+// Warna diambil dari token CSS saat menggambar, jadi selalu sama dengan tema halaman.
+const token = (name, fallback) => getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
 
 function resize(){
   const dpr = Math.min(2, devicePixelRatio || 1), W = pad.clientWidth, H = pad.clientHeight;
@@ -177,7 +178,7 @@ function paintStatic(){
   c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, bg.width, bg.height);
   c.setTransform(s * dpr, 0, 0, s * dpr, ox * dpr, oy * dpr);
   c.lineCap = 'round'; c.lineJoin = 'round';
-  const dark = isDark();
+  const dark = isDark(), lane = token('--card', '#FFFDF7'), accent = token('--accent', '#B98CFF');
 
   // Garis bantu: atas, tengah, dasar
   c.lineWidth = 1.2 / s * 2;
@@ -189,7 +190,7 @@ function paintStatic(){
   c.setLineDash([]);
 
   // Huruf samar = "jalan" putih dengan pinggiran tipis, supaya jelas ke mana jari bergerak
-  for (const [w, col] of [[30, dark ? 'rgba(255,255,255,.28)' : 'rgba(27,42,107,.16)'], [26, dark ? '#1B4D7E' : '#FFFDF7']]) {
+  for (const [w, col] of [[30, dark ? 'rgba(255,255,255,.28)' : 'rgba(27,42,107,.16)'], [26, lane]]) {
     c.strokeStyle = c.fillStyle = col; c.lineWidth = w;
     for (const st of T.strokes) {
       if (st.dot) { c.beginPath(); c.arc(st.pts[0].x, st.pts[0].y, w / 2, 0, 7); c.fill(); }
@@ -198,7 +199,7 @@ function paintStatic(){
   }
 
   // Goresan yang sudah ditulis
-  const ink = T.finished ? (rainbowGrad ||= rainbow()) : ACCENT;
+  const ink = T.finished ? (rainbowGrad ||= rainbow()) : accent;
   c.strokeStyle = c.fillStyle = ink; c.lineWidth = 15;
   T.strokes.forEach((st, i) => {
     if (i > T.si && !T.finished) return;
@@ -267,14 +268,16 @@ function follow(q){
   // Cari titik terdekat di depan posisi sekarang (tidak mundur, tidak melompat jauh).
   // Jari harus menelusuri jalur secara menyambung: kalau keluar jalur, progres berhenti,
   // dan baru lanjut lagi saat jari kembali di dekat titik hijau. Coretan asal tidak ikut menulis.
+  // Saat keluar jalur, masuk lagi hanya boleh di dekat titik hijau (jendela REENTRY), bukan sejauh AHEAD.
   let best = -1, bestD = TOL;
-  const end = Math.min(st.pts.length - 1, T.k + AHEAD);
+  const end = Math.min(st.pts.length - 1, T.k + (T.onTrack ? AHEAD : REENTRY));
   for (let j = T.k; j <= end; j++) {
     const d = Math.hypot(q.x - st.pts[j].x, q.y - st.pts[j].y);
     if (d < bestD) { bestD = d; best = j; }
   }
-  const tip = st.pts[T.k], nearTip = Math.hypot(q.x - tip.x, q.y - tip.y) < TOL * 1.2;
-  if (best < 0 || (!T.onTrack && !nearTip && best - T.k > REENTRY)) { T.onTrack = false; return; }
+  // Masuk lagi setelah keluar jalur: jari harus dekat titik hijau itu sendiri.
+  const tip = st.pts[T.k];
+  if (best < 0 || (!T.onTrack && Math.hypot(q.x - tip.x, q.y - tip.y) > TOL)) { T.onTrack = false; return; }
   T.onTrack = true;
   if (best > T.k) { T.k = best; sTick(); invalidate(); }
   if (T.k >= st.pts.length - 1 - Math.round(8 / STEP)) strokeDone();
@@ -321,7 +324,9 @@ const lift = e => {
   if (!st.dot && T.k > 0 && (st.pts.length - 1 - T.k) * STEP <= 20) strokeDone();
 };
 // Didengarkan di window: tetap tertangkap walau jari/mouse dilepas di luar papan atau capture gagal.
-addEventListener('pointerup', lift); addEventListener('pointercancel', lift);
+// pointercancel (gestur sistem, notifikasi) hanya melepas kunci; progres tidak dihitung selesai.
+addEventListener('pointerup', lift);
+addEventListener('pointercancel', e => { if (e.pointerId === pointer) pointer = null; });
 // Kalau browser melepas capture tanpa pointerup (misalnya gestur sistem), lepaskan kunci satu jari.
 pad.addEventListener('lostpointercapture', e => { if (e.pointerId === pointer) pointer = null; });
 

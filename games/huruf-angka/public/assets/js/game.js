@@ -40,7 +40,7 @@ const NOUN = { huruf: 'huruf', angka: 'angka' };
    isi RECORDINGS dengan key yang sama, misalnya:
      'mana-huruf-B': 'assets/audio/mana-huruf-b.mp3'
    Key yang dipakai: mana-<set>-<glyph>, benar-<set>-<glyph>, nama-<set>-<glyph>,
-   urutkan, coba-lagi, hore. */
+   urut-<set>-<glyph pertama>-<jumlah kartu>, urutkan, coba-lagi, hore. */
 const RECORDINGS = {};
 let voice = null, clip = null;
 function pickVoice(){
@@ -137,7 +137,8 @@ function fxReset(){ parts = []; cancelAnimationFrame(fxRaf); fxRaf = 0; fxClear(
 function burst(x, y, n = 36){
   if (reducedMotion) return;
   const dpr = Math.min(2, devicePixelRatio || 1);
-  if (fx.width !== fx.clientWidth * dpr) { fx.width = fx.clientWidth * dpr; fx.height = fx.clientHeight * dpr; fctx.setTransform(dpr,0,0,dpr,0,0); }
+  const fw = Math.round(fx.clientWidth * dpr), fh = Math.round(fx.clientHeight * dpr);
+  if (fx.width !== fw || fx.height !== fh) { fx.width = fw; fx.height = fh; fctx.setTransform(dpr,0,0,dpr,0,0); }
   const cols = ['#FFD23F','#FF8FB8','#47C9E5','#7BD88F','#B98CFF'];
   for (let i = 0; i < n; i++) {
     const a = Math.random() * Math.PI * 2, v = 160 + Math.random() * 260;
@@ -248,8 +249,9 @@ function miss(card, correctCard){
 }
 
 function tapGuess(card, item){
-  if (S.locked) return;
+  if (S.locked || card.dataset.tapped) return;
   if (item !== S.target) {
+    card.dataset.tapped = '1';   // ketukan ganda pada kartu salah dihitung sekali
     miss(card, [...cardsEl.children][S.choices.indexOf(S.target)]);
     setTimeout(() => card.classList.add('gone'), 450);
     return;
