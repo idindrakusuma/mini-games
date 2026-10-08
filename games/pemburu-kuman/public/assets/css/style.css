@@ -68,7 +68,7 @@ h1{
 }
 .hud > *{ pointer-events:auto; }
 .round{
-  width:64px; height:64px;   /* target sentuh minimal 64px */ border-radius:50%; border:0; background:var(--card); color:var(--text);
+  width:64px; height:64px; flex:none;   /* target sentuh minimal 64px, tidak menyusut */ border-radius:50%; border:0; background:var(--card); color:var(--text);
   font-size:1.7rem; box-shadow:0 4px 0 rgba(0,0,0,.2); display:grid; place-items:center;
 }
 .round[hidden]{ visibility:hidden; display:grid; }
