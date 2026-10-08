@@ -29,6 +29,7 @@ games/
 scripts/build.mjs      ← menyusun games/*/public ke dist/
 vercel.json
 AGENT.md               ← aturan untuk AI agent & kontributor
+.claude/skills/new-game ← skill: workflow membuat game baru
 ```
 
 Setiap game berdiri sendiri: tidak ada kode bersama antar game. Hanya isi folder `public/` yang di-deploy.

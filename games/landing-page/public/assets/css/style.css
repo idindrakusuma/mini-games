@@ -1,6 +1,6 @@
 :root{
   --bg:#BFEFFA; --card:#FFFDF7; --text:#1B2A6B; --muted:#3F5A92;
-  --sun:#FFD23F; --soap:#FF8FB8; --leaf:#7BD88F; --water:#47C9E5;
+  --sun:#FFD23F; --soap:#FF8FB8; --leaf:#7BD88F; --water:#47C9E5; --grape:#B98CFF;
   --cloud:rgba(255,255,255,.85); --soon:#E6EEF5; --shadow:rgba(27,42,107,.22);
 }
 @media (prefers-color-scheme: dark){
@@ -80,6 +80,10 @@ a.card:active{ transform:translateY(5px); box-shadow:0 3px 0 var(--shadow); }
   background:var(--accent, var(--water)); color:#1B2A6B; box-shadow:0 5px 0 rgba(27,42,107,.22);
 }
 .card.soap{ --accent:var(--soap); }
+.card.sun{ --accent:var(--sun); }
+.card.leaf{ --accent:var(--leaf); }
+.card.water{ --accent:var(--water); }
+.card.grape{ --accent:var(--grape); }
 .card.soon{ --accent:var(--soon); border-style:dashed; box-shadow:none; opacity:.85; }
 .card.soon .ico{ background:var(--soon); filter:grayscale(.3); animation:none; }
 .card.soon .play{ background:var(--soon); color:var(--muted); box-shadow:none; }

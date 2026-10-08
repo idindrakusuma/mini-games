@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{{NAME}} · {{TITLE_SUFFIX}}</title>
+<meta name="description" content="{{DESCRIPTION}}">
+<meta name="author" content="Indra Kusuma">
+<meta name="keywords" content="{{KEYWORDS}}">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="{{BG}}">
+<link rel="canonical" href="{{URL}}">
+
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="{{NAME}}">
+<meta property="og:locale" content="id_ID">
+<meta property="og:url" content="{{URL}}">
+<meta property="og:title" content="{{NAME}} · {{TITLE_SUFFIX}}">
+<meta property="og:description" content="{{DESCRIPTION}}">
+<meta property="og:image" content="{{URL}}assets/images/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{{NAME}}: {{TAGLINE}}">
+<meta property="article:author" content="Indra Kusuma">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{NAME}} · {{TITLE_SUFFIX}}">
+<meta name="twitter:description" content="{{DESCRIPTION}}">
+<meta name="twitter:image" content="{{URL}}assets/images/og-image.png">
+<meta name="twitter:image:alt" content="{{NAME}}: {{TAGLINE}}">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": ["WebApplication", "VideoGame"],
+  "name": "{{NAME}}",
+  "url": "{{URL}}",
+  "image": "{{URL}}assets/images/og-image.png",
+  "description": "{{DESCRIPTION}}",
+  "inLanguage": "id",
+  "applicationCategory": "GameApplication",
+  "genre": ["Kids", "Casual"],
+  "operatingSystem": "Any (web browser)",
+  "isAccessibleForFree": true,
+  "audience": { "@type": "PeopleAudience", "suggestedMinAge": 3, "suggestedMaxAge": 10 },
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "IDR" },
+  "isPartOf": { "@type": "WebSite", "name": "Taman Bermain", "url": "https://mini-games.indrakusuma.dev/" },
+  "author": { "@type": "Person", "name": "Indra Kusuma", "url": "https://indrakusuma.dev" }
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<main id="home">
+  <div class="mascot" aria-hidden="true">{{EMOJI}}</div>
+  <h1>{{NAME}}</h1>
+  <p class="lead">{{TAGLINE}}</p>
+  <button class="btn big" id="startBtn">Main! ▶</button>
+  <div class="stars" id="starsHome">⭐ 0 bintang</div>
+  <p class="back"><a href="../">← Taman Bermain</a></p>
+  <p class="credit">Dibuat oleh <a href="https://indrakusuma.dev" rel="author">Indra Kusuma</a></p>
+</main>
+
+<section id="play" aria-label="Main">
+  <canvas id="stage"></canvas>
+  <div class="hud">
+    <button class="round" id="homeBtn" aria-label="Kembali ke awal">🏠</button>
+    <div class="counter" id="counter"></div>
+    <span class="round" hidden></span>
+  </div>
+  <div class="tip" id="tip"></div>
+
+  <div class="sheet" id="winSheet">
+    <div class="panel">
+      <div class="big">🌟</div>
+      <h2>Hore, hebat!</h2>
+      <p>Kamu dapat 1 bintang!</p>
+      <button class="btn" id="againBtn">Main lagi</button>
+      <button class="btn alt" id="doneBtn">Selesai</button>
+    </div>
+  </div>
+</section>
+
+<script src="assets/js/game.js"></script>
+</body>
+</html>

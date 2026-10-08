@@ -41,12 +41,9 @@ vercel.json
 
 ## Menambah game baru
 
-1. Buat `games/<nama-game>/public/index.html` beserta `assets/` (css, js, icons, images) dan `site.webmanifest`.
-2. Tambahkan `games/<nama-game>/README.md` (tentang game dan cara main).
-3. Tambahkan kartu di `games/landing-page/public/index.html` (salin kartu yang sudah ada) dan ganti salah satu kartu "Segera hadir" bila perlu.
-4. Tambahkan URL game ke `games/landing-page/public/sitemap.xml`.
-5. Tambahkan baris di tabel "Daftar Game" pada `README.md`.
-6. Jalankan `npm run build`, lalu cek di browser dengan viewport HP: halaman `/<nama-game>/` (dan juga tanpa garis miring di akhir), tanpa error konsol, tanpa request 404.
+Pakai skill **`new-game`** (`.claude/skills/new-game/SKILL.md`). Skill ini memandu dari penentuan konsep, scaffold otomatis (folder, SEO, PWA, kartu landing page, sitemap, README), gameplay, thumbnail, sampai tes di browser.
+
+Untuk agent selain Claude Code: baca file SKILL.md itu dan ikuti langkah-langkahnya. Scaffold-nya dijalankan dengan `node .claude/skills/new-game/scripts/new-game.mjs` dan argumen yang dijelaskan di sana.
 
 ## Perintah
 
