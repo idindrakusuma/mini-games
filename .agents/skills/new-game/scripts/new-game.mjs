@@ -1,6 +1,6 @@
 // Scaffold game baru di Taman Bermain (tanpa dependency).
 //
-//   node .claude/skills/new-game/scripts/new-game.mjs \
+//   node .agents/skills/new-game/scripts/new-game.mjs \
 //     --slug tebak-hewan --name "Tebak Hewan" --emoji 🐘 --accent leaf \
 //     --tagline "Dengar suaranya, tebak hewannya!" \
 //     --description "Game tebak suara hewan untuk anak. ..." \

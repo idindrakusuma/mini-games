@@ -25,7 +25,7 @@ Jangan mulai bikin game sebelum konsepnya disetujui user.
 Dari root repo:
 
 ```bash
-node .claude/skills/new-game/scripts/new-game.mjs \
+node .agents/skills/new-game/scripts/new-game.mjs \
   --slug tebak-hewan --name "Tebak Hewan" --emoji 🐘 --accent leaf \
   --tagline "Dengar suaranya, tebak hewannya!" \
   --description "Game tebak suara hewan untuk anak. Gratis, langsung main di browser tanpa install." \

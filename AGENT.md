@@ -41,9 +41,9 @@ vercel.json
 
 ## Menambah game baru
 
-Pakai skill **`new-game`** (`.claude/skills/new-game/SKILL.md`). Skill ini memandu dari penentuan konsep, scaffold otomatis (folder, SEO, PWA, kartu landing page, sitemap, README), gameplay, thumbnail, sampai tes di browser.
+Pakai skill **`new-game`** (`.agents/skills/new-game/SKILL.md`). Skill ini memandu dari penentuan konsep, scaffold otomatis (folder, SEO, PWA, kartu landing page, sitemap, README), gameplay, thumbnail, sampai tes di browser.
 
-Untuk agent selain Claude Code: baca file SKILL.md itu dan ikuti langkah-langkahnya. Scaffold-nya dijalankan dengan `node .claude/skills/new-game/scripts/new-game.mjs` dan argumen yang dijelaskan di sana.
+Agent apa pun cukup membaca file SKILL.md itu dan mengikuti langkah-langkahnya. Scaffold-nya dijalankan dengan `node .agents/skills/new-game/scripts/new-game.mjs` dan argumen yang dijelaskan di sana.
 
 ## Perintah
 
