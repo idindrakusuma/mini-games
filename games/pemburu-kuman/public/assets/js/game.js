@@ -1,4 +1,5 @@
 /* Pemburu Kuman · logika game: kamera, deteksi tangan/gigi, kuman, skor. */
+/* Mode gigi memakai MediaPipe Face Landmarker (assets/vendor/) untuk mencari mulut; kalau gagal dimuat, kembali ke deteksi warna. */
 (() => {
 const $ = s => document.querySelector(s);
 const rnd = (a,b) => a + Math.random()*(b-a);
@@ -95,6 +96,107 @@ function box(I,x,y,r){
   const x0=Math.max(0,x-r), y0=Math.max(0,y-r), x1=Math.min(W,x+r+1), y1=Math.min(H,y+r+1);
   return I[y1*(W+1)+x1]-I[y0*(W+1)+x1]-I[y1*(W+1)+x0]+I[y0*(W+1)+x0];
 }
+/* ---------- Face model for teeth mode (optional, on-device) ---------- */
+// Titik bibir bagian dalam (FaceMesh), dari sudut mulut 78 ke sudut mulut 308.
+const LIP_UP=[78,191,80,81,82,13,312,311,310,415,308], LIP_LO=[78,95,88,178,87,14,317,402,318,324,308];
+const vendor = f => new URL('assets/vendor/'+f, document.baseURI).href, MP='mediapipe-0.10.35/';
+// Ukuran asli dua file terbesar, untuk progress bar (content-length bisa berupa ukuran terkompresi).
+const WASM_BYTES=11153617, MODEL_BYTES=3758596;
+let face=null, faceState='idle', faceTs=0, faceGot=0, faceStart=0, mouth=null, faceSeen=false;
+const mcv = document.createElement('canvas'), mctx = mcv.getContext('2d',{willReadFrequently:true});
+async function grab(url){
+  const res = await fetch(url);
+  if(!res.ok) throw new Error(res.status+' '+url);
+  if(!res.body){ const b=new Uint8Array(await res.arrayBuffer()); faceGot+=b.length; return b; }
+  const reader=res.body.getReader(), parts=[]; let n=0;
+  for(;;){ const {done,value}=await reader.read(); if(done) break; parts.push(value); n+=value.length; faceGot+=value.length; }
+  const out=new Uint8Array(n); let o=0; for(const p of parts){ out.set(p,o); o+=p.length; }
+  return out;
+}
+// Hanya dipanggil saat mode gigi dipilih, jadi mode tangan tidak pernah mengunduh model.
+async function loadFace(){
+  if(faceState!=='idle') return;
+  faceState='loading'; faceGot=0; faceStart=performance.now();
+  let blobUrl=null;
+  try{
+    const {FilesetResolver, FaceLandmarker} = await import(vendor(MP+'vision_bundle.mjs'));
+    const files = await FilesetResolver.forVisionTasks(vendor(MP+'wasm'));
+    // Hanya varian SIMD yang disimpan; jangan unduh apa pun kalau browser butuh varian lain.
+    if(/nosimd/.test(files.wasmBinaryPath)) throw new Error('no wasm simd');
+    const [wasm, model] = await Promise.all([grab(files.wasmBinaryPath), grab(vendor('face_landmarker-f16-v1.task'))]);
+    files.wasmBinaryPath = blobUrl = URL.createObjectURL(new Blob([wasm], {type:'application/wasm'}));
+    const opts = delegate => ({baseOptions:{modelAssetBuffer:new Uint8Array(model), delegate}, runningMode:'VIDEO', numFaces:1});
+    try{ face = await FaceLandmarker.createFromOptions(files, opts('GPU')); }
+    catch(e){ face = await FaceLandmarker.createFromOptions(files, opts('CPU')); }
+    faceState='ready';
+  }catch(e){ face=null; faceState='failed'; }
+  finally{ if(blobUrl) URL.revokeObjectURL(blobUrl); }
+}
+const faceLoading = () => mode==='teeth' && useCam && faceState==='loading';
+// Loader baru muncul kalau unduhan agak lama, supaya tidak berkedip saat file sudah ada di cache.
+let lastPct=-1;
+function showLoader(now){
+  const on = faceLoading() && now-faceStart>300 && !$('#camSheet').classList.contains('on');
+  $('#loadSheet').classList.toggle('on', on);
+  if(!on) return;
+  const pct = Math.min(99, Math.round(faceGot/(WASM_BYTES+MODEL_BYTES)*100));
+  if(pct===lastPct) return;
+  lastPct=pct;
+  $('#loadBar').style.width = pct+'%';
+  $('#loadPct').textContent = pct+'%';
+  $('#loadSheet .bar').setAttribute('aria-valuenow', pct);
+}
+const useFace = () => mode==='teeth' && useCam && faceState==='ready';
+function lipAt(poly,t){
+  const f=t*(poly.length-1), i=Math.min(poly.length-2, f|0), k=f-i;
+  return [poly[i][0]+(poly[i+1][0]-poly[i][0])*k, poly[i][1]+(poly[i+1][1]-poly[i][1])*k];
+}
+// Posisi gigi: sedikit masuk dari garis bibir ke arah tengah mulut. Hasilnya koordinat 0..1 di layar.
+function anchorUV(a){
+  const p=lipAt(a.up?mouth.up:mouth.lo, a.t), q=lipAt(a.up?mouth.lo:mouth.up, a.t);
+  return [p[0]+(q[0]-p[0])*.3, p[1]+(q[1]-p[1])*.3];
+}
+const cellOf = uv => Math.min(H-1,Math.max(0,(uv[1]*H)|0))*W + Math.min(W-1,Math.max(0,(uv[0]*W)|0));
+function inPoly(x,y,P){
+  let c=false;
+  for(let i=0,j=P.length-1;i<P.length;j=i++){
+    if((P[i][1]>y)!==(P[j][1]>y) && x<(P[j][0]-P[i][0])*(y-P[i][1])/(P[j][1]-P[i][1])+P[i][0]) c=!c;
+  }
+  return c;
+}
+// Mengembalikan true kalau gigi kelihatan. Mengisi `mouth` (koordinat layar, ikut dicermin seperti grid deteksi).
+function analyzeMouth(s){
+  let r;
+  try{ faceTs=Math.max(faceTs+1, Math.round(performance.now())); r=face.detectForVideo(s.el, faceTs); }
+  catch(e){ face=null; faceState='failed'; return false; }
+  const L = r && r.faceLandmarks && r.faceLandmarks[0];
+  faceSeen = !!L;
+  if(!L) return false;
+  const raw = i => [L[i].x, L[i].y], up=LIP_UP.map(raw), lo=LIP_LO.map(raw);
+  const px = (a,b) => Math.hypot((a[0]-b[0])*s.w, (a[1]-b[1])*s.h);
+  const width = px(up[0],up[10]), gap = px(raw(13),raw(14));
+  const flip = p => [s.mirror?1-p[0]:p[0], p[1]];
+  mouth = {up:up.map(flip), lo:lo.map(flip)};
+  if(width < 12 || gap < width*.05) return false;
+  // Gigi = piksel terang dan tidak kemerahan di dalam bibir bagian dalam.
+  const poly = up.concat(lo.slice(1,-1).reverse());
+  let x0=1,y0=1,x1=0,y1=0; for(const p of poly){ x0=Math.min(x0,p[0]); y0=Math.min(y0,p[1]); x1=Math.max(x1,p[0]); y1=Math.max(y1,p[1]); }
+  const sx=Math.max(0,x0*s.w), sy=Math.max(0,y0*s.h), sw=Math.min(s.w,x1*s.w)-sx, sh=Math.min(s.h,y1*s.h)-sy;
+  if(sw<4 || sh<2) return false;
+  const MW=48, MH=Math.max(6, Math.min(48, Math.round(MW*sh/sw)));
+  if(mcv.width!==MW || mcv.height!==MH){ mcv.width=MW; mcv.height=MH; }
+  mctx.drawImage(s.el, sx, sy, sw, sh, 0, 0, MW, MH);
+  const d = mctx.getImageData(0,0,MW,MH).data;
+  let inside=0, teeth=0;
+  for(let y=0;y<MH;y++) for(let x=0;x<MW;x++){
+    if(!inPoly((sx+(x+.5)*sw/MW)/s.w, (sy+(y+.5)*sh/MH)/s.h, poly)) continue;
+    inside++;
+    const p=(y*MW+x)*4, r=d[p], g=d[p+1], b=d[p+2], mx=Math.max(r,g,b), mn=Math.min(r,g,b);
+    if(.299*r+.587*g+.114*b>95 && mx-mn<Math.max(45,mx*.32) && r-b<70) teeth++;
+  }
+  return inside>=12 && (teeth>=inside*.08 || gap>width*.3);
+}
+
 function source(){
   if(useCam) return {el:video, w:video.videoWidth, h:video.videoHeight, mirror:facing==='user', ready:video.readyState>=2 && video.videoWidth>0};
   return {el:cartoon, w:480, h:360, mirror:false, ready:true};
@@ -120,7 +222,16 @@ function analyze(now){
   const Is=integral(skin), clean=new Uint8Array(N); let sc=0;
   for(let y=0;y<H;y++) for(let x=0;x<W;x++){ const i=y*W+x; if(skin[i] && box(Is,x,y,1)>=5){ clean[i]=1; sc++; } }
   mask.fill(0); cand.length=0;
-  if(mode==='hands'){
+  if(faceLoading()){
+    // tunggu model selesai diunduh; loader yang tampil
+  } else if(useFace()){
+    if(analyzeMouth(s)) cand.push(0);
+    if(mouth) for(const g of germs){
+      if(g.state!=='alive') continue;
+      if(!g.a){ g.a={up:Math.random()<.5, t:rnd(.2,.8)}; }
+      g.cell=cellOf(anchorUV(g.a));
+    }
+  } else if(mode==='hands'){
     if(sc > N*.03 && sc < N*.85) for(let i=0;i<N;i++) if(clean[i]){ mask[i]=1; cand.push(i); }
   } else {
     const Ic=integral(clean), Id=integral(dark), tmp=[];
@@ -134,7 +245,7 @@ function analyze(now){
   if(detected) lastSeen=now;
   // keep germs glued to the hand / teeth
   for(const g of germs){
-    if(g.state!=='alive' || !detected || mask[g.cell]) continue;
+    if(g.state!=='alive' || !detected || (g.a && useFace()) || mask[g.cell]) continue;
     const gx=g.cell%W, gy=(g.cell/W)|0; let best=-1, bd=1e9;
     for(const c of cand){ const dx=c%W-gx, dy=((c/W)|0)-gy, dd=dx*dx+dy*dy; if(dd<bd){ bd=dd; best=c; } }
     if(best>=0) g.cell=best;
@@ -172,14 +283,28 @@ function updateCounter(){
   $('#counter').textContent = left ? `🦠 ${left} kuman` : '✨ Bersih!';
 }
 function spawn(now){
+  if(useFace() && mouth) return spawnTooth(now);
   let best=null, bd=-1;
   for(let k=0;k<12;k++){
     const c = pick(cand), cx=c%W, cy=(c/W)|0;
     let md=1e9; for(const g of germs){ if(g.state!=='alive') continue; const dx=g.cell%W-cx, dy=((g.cell/W)|0)-cy; md=Math.min(md,dx*dx+dy*dy); }
     if(md>bd){ bd=md; best=c; }
   }
-  germs.push({cell:best, ox:rnd(-.4,.4), oy:rnd(-.4,.4), hp:100, col:pick(COLORS), ph:rnd(0,6), state:'alive', alpha:0,
-    sx:null, sy:null, hurtT:0, say:pick(TAUNT[mode]), sayUntil:now+1800, size:rnd(.85,1.15)});
+  addGerm({cell:best, ox:rnd(-.4,.4), oy:rnd(-.4,.4)}, now);
+}
+// Kuman di gigi menempel ke titik bibir, jadi ikut bergerak bersama mulut.
+function spawnTooth(now){
+  let best=null, bd=-1;
+  for(let k=0;k<12;k++){
+    const a={up:Math.random()<.5, t:rnd(.18,.82)}, uv=anchorUV(a);
+    let md=1e9; for(const g of germs){ if(g.state!=='alive' || !g.a) continue; const o=anchorUV(g.a); md=Math.min(md,(o[0]-uv[0])**2+(o[1]-uv[1])**2); }
+    if(md>bd){ bd=md; best=a; }
+  }
+  addGerm({a:best, cell:cellOf(anchorUV(best)), ox:0, oy:0}, now);
+}
+function addGerm(pos, now){
+  germs.push(Object.assign(pos, {hp:100, col:pick(COLORS), ph:rnd(0,6), state:'alive', alpha:0,
+    sx:null, sy:null, hurtT:0, say:pick(TAUNT[mode]), sayUntil:now+1800, size:rnd(.85,1.15)}));
   round.spawned++; lastSpawn=now;
 }
 function hurt(g,amt,now){
@@ -284,7 +409,9 @@ function frame(now){
   const R = germR();
   for(const g of germs){
     if(rect){
-      const u=((g.cell%W)+.5+g.ox)/W, v=(((g.cell/W)|0)+.5+g.oy)/H;
+      let u, v;
+      if(g.a && mouth && useFace()) [u,v]=anchorUV(g.a);
+      else { u=((g.cell%W)+.5+g.ox)/W; v=(((g.cell/W)|0)+.5+g.oy)/H; }
       const tx=rect.x+u*rect.w, ty=rect.y+v*rect.h;
       if(g.sx==null){ g.sx=tx; g.sy=ty; } else if(g.state==='alive'){ g.sx+=(tx-g.sx)*.35; g.sy+=(ty-g.sy)*.35; }
     }
@@ -316,11 +443,13 @@ function frame(now){
   parts = parts.filter(p=>p.life<p.max);
 
   // instructions
-  if(!round || round.done || $('#camSheet').classList.contains('on')) setTip('');
+  showLoader(now);
+  if(!round || round.done || $('#camSheet').classList.contains('on') || $('#loadSheet').classList.contains('on')) setTip('');
   else if(!s.ready) setTip('Sebentar, kamera lagi siap-siap…');
+  else if(!visible && useFace() && !faceSeen) setTip('Lihat ke kamera, ya! 🙂<small>Wajahmu harus kelihatan</small>');
   else if(!visible) setTip(mode==='hands'
       ? 'Tunjukkan tanganmu ke kamera 🖐️<small>Kumannya lagi ngumpet!</small>'
-      : 'Buka mulut, senyum lebar! 😁<small>Dekatkan gigimu ke kamera</small>');
+      : 'Buka mulut, senyum lebar! 😁<small>'+(useFace()?'Gigimu harus kelihatan':'Dekatkan gigimu ke kamera')+'</small>');
   else setTip(mode==='hands'
       ? (useCam ? 'Gosok-gosok tanganmu! 🧼<small>Atau tekan kumannya pakai jari</small>' : 'Gosok kumannya pakai jari! 🧼')
       : (useCam ? 'Sikat gigimu, ayo! 🪥<small>Atau tekan kumannya pakai jari</small>' : 'Gosok kumannya pakai jari! 🪥'));
@@ -349,11 +478,13 @@ function startPlay(m){
   play.classList.add('on'); resize();
   $('#winSheet').classList.remove('on');
   detected=false; lastSeen=0; detKey='';
+  mouth=null; faceSeen=false;
+  if(m==='teeth') loadFace();
   newRound(); drawCartoon(); startCam();
 }
 function goHome(){
   stopCam(); useCam=false; screen='home'; round=null;
-  play.classList.remove('on'); $('#camSheet').classList.remove('on'); $('#winSheet').classList.remove('on');
+  play.classList.remove('on'); $('#camSheet').classList.remove('on'); $('#winSheet').classList.remove('on'); $('#loadSheet').classList.remove('on');
   document.getElementById('home').style.display='';
 }
 
