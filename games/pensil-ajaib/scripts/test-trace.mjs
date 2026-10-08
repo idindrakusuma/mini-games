@@ -11,11 +11,9 @@ p.on('pageerror', e => errors.push(e.message));
 p.on('response', r => { if (r.status() >= 400) errors.push(r.status() + ' ' + r.url()); });
 await p.goto(BASE + '/pensil-ajaib/', { waitUntil: 'networkidle' });
 
-// Titik jalur di layar (rumus skala sama dengan resize() di game.js)
+// Titik jalur di layar, lewat pensilAjaibTest.toScreen dari game.js (rumus skala tidak diduplikasi di sini)
 const plan = (ch, jitter) => p.evaluate(([ch, jitter]) => {
-  const pad = document.getElementById('pad').getBoundingClientRect();
-  const s = Math.min(pad.width / 120, pad.height / 175) * .96, ox = (pad.width - 120 * s) / 2, oy = (pad.height - 175 * s) / 2 - 5 * s;
-  const map = (x, y) => ({ x: pad.left + ox + x * s + (Math.random() * 2 - 1) * jitter * s, y: pad.top + oy + y * s + (Math.random() * 2 - 1) * jitter * s });
+  const map = (x, y) => { const q = pensilAjaibTest.toScreen(x, y), j = () => (Math.random() * 2 - 1) * jitter * q.s; return { x: q.x + j(), y: q.y + j() }; };
   return STROKES[ch].map(d => {
     if (d.startsWith('dot')) { const [, x, y] = d.split(' ').map(Number); return { dot: true, pts: [map(x, y)] }; }
     const el = document.createElementNS('http://www.w3.org/2000/svg', 'path'); el.setAttribute('d', d); document.getElementById('measure').append(el);

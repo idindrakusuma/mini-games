@@ -204,7 +204,7 @@ function question(){
     const item = S.targets[S.q];
     const size = layout(1, W, H - 84 - 22, 260);
     const c = makeCard(item); c.style.setProperty('--size', size + 'px'); c.classList.add('show');
-    c.addEventListener('click', ask);
+    c.addEventListener('click', () => { if (!swiped) ask(); });
     cardsEl.append(c);
     $('#prevBtn').disabled = S.q === 0;
   } else if (S.game === 'tebak') {
@@ -320,11 +320,12 @@ function step(d){
 $('#prevBtn').addEventListener('click', () => step(-1));
 $('#nextBtn').addEventListener('click', () => step(1));
 // Geser kartu ke kiri/kanan
-let sx = null;
-cardsEl.addEventListener('pointerdown', e => { sx = e.clientX; });
+// Geser juga memicu "click" setelah pointerup; tandai supaya kartu tidak ikut membacakan ulang.
+let sx = null, swiped = false;
+cardsEl.addEventListener('pointerdown', e => { sx = e.clientX; swiped = false; });
 cardsEl.addEventListener('pointerup', e => {
   if (sx == null) return; const dx = e.clientX - sx; sx = null;
-  if (Math.abs(dx) > 60) step(dx < 0 ? 1 : -1);
+  if (Math.abs(dx) > 60) { swiped = true; step(dx < 0 ? 1 : -1); }
 });
 
 /* ---------- Layar: awal → menu (Huruf/Angka) → main ---------- */

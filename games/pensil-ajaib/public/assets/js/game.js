@@ -33,7 +33,7 @@ function info(ch){
   if (/\d/.test(ch)) {
     const n = +ch;
     return { kind: 'angka', say: NUMS[n], ask: `Ayo tulis angka ${NUMS[n]}!`, done: `Hebat! ${cap(NUMS[n])}!`,
-             label: `${ch}, ${NUMS[n]}!`, pic: NUM_PICS[n].repeat(n) || '' };
+             label: `${ch}, ${NUMS[n]}! ${NUM_PICS[n].repeat(n)}`.trim() };
   }
   const [say, word, pic] = WORDS[ch.toUpperCase()];
   const size = ch === ch.toUpperCase() ? 'besar' : 'kecil';
@@ -45,7 +45,7 @@ function info(ch){
 /* ---------- Suara ----------
    Semua ucapan lewat say(key, teks). Rekaman suara asli bisa didaftarkan di RECORDINGS
    dengan key yang sama, misalnya 'tulis-A': 'assets/audio/tulis-a-besar.mp3'.
-   Key: tulis-<ch>, hebat-<ch>, bintang. */
+   Key: tulis-<ch>, hebat-<ch>. */
 const RECORDINGS = {};
 let voice = null, clip = null;
 function pickVoice(){
@@ -119,7 +119,7 @@ renderGrid();
 
 /* ---------- Papan menulis ---------- */
 const play = $('#play'), pad = $('#pad'), ctx = pad.getContext('2d');
-let T = null;          // { ch, strokes, si (goresan aktif), k (titik terjauh), finished, t0 }
+let T = null;          // { ch, strokes, si (goresan aktif), k (titik terjauh), finished, onTrack }
 let view = { s: 1, ox: 0, oy: 0 }, raf = 0;
 const ACCENT = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#B98CFF';
 
@@ -129,20 +129,31 @@ function resize(){
   const s = Math.min(W / BOX.w, H / (BOX.desc + 15 - (BOX.top - 15))) * .96;
   view = { s, dpr, ox: (W - BOX.w * s) / 2, oy: (H - (BOX.desc + 15 - (BOX.top - 15)) * s) / 2 - (BOX.top - 15) * s };
 }
-addEventListener('resize', () => { if (T) resize(); });
+// Ukur ulang setiap kali ukuran papan berubah (rotasi layar, teks di atasnya berganti baris, font termuat).
+new ResizeObserver(() => { if (T) { resize(); redraw(); } }).observe(pad);
+
+// Mode gelap: ikuti data-theme kalau ada, kalau tidak ikuti pengaturan perangkat (sama seperti CSS).
+const darkMQ = matchMedia('(prefers-color-scheme: dark)');
+const isDark = () => { const t = document.documentElement.dataset.theme; return t ? t === 'dark' : darkMQ.matches; };
+darkMQ.addEventListener?.('change', () => redraw());
+
+// Gambar hanya saat ada yang berubah. Loop animasi hanya berjalan selama titik hijau berdenyut.
+function redraw(){ if (T && !raf) raf = requestAnimationFrame(draw); }
 
 function open(ch){
-  T = { ch, strokes: strokesOf(ch), si: 0, k: 0, finished: false, t0: performance.now() };
+  T = { ch, strokes: strokesOf(ch), si: 0, k: 0, finished: false, onTrack: false };
+  pointer = null; clearTimeout(starTimer); $('#toast').classList.remove('on');
   const i = info(ch);
   $('#chip').textContent = ch;
   $('#say').textContent = 'Ikuti titik hijau, ya!';
   $('#nextBtn').classList.remove('ready');
   play.classList.add('on'); fxReset(); resize();
   say(`tulis-${ch}`, i.ask);
-  cancelAnimationFrame(raf); raf = requestAnimationFrame(draw);
+  cancelAnimationFrame(raf); raf = 0; redraw();
 }
 function close(){
-  T = null; cancelAnimationFrame(raf); hush(); fxReset();
+  T = null; cancelAnimationFrame(raf); raf = 0; pointer = null; hush(); fxReset();
+  clearTimeout(starTimer); $('#toast').classList.remove('on');
   play.classList.remove('on'); renderGrid(); showStars();
 }
 function nextChar(){
@@ -150,14 +161,14 @@ function nextChar(){
   open(list[(list.indexOf(T.ch) + 1) % list.length]);
 }
 
-/* Gambar (berjalan terus selama papan tampil, untuk titik yang berdenyut) */
 function draw(now){
+  raf = 0;
   if (!T) return;
   const { s, dpr, ox, oy } = view;
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, pad.width, pad.height);
   ctx.setTransform(s * dpr, 0, 0, s * dpr, ox * dpr, oy * dpr);
   ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+  const dark = isDark();
 
   // Garis bantu: atas, tengah, dasar
   ctx.lineWidth = 1.2 / s * 2;
@@ -178,7 +189,7 @@ function draw(now){
   }
 
   // Goresan yang sudah ditulis
-  const ink = T.finished ? rainbow() : ACCENT;
+  const ink = T.finished ? (rainbowGrad ||= rainbow()) : ACCENT;
   ctx.strokeStyle = ctx.fillStyle = ink; ctx.lineWidth = 15;
   T.strokes.forEach((st, i) => {
     if (i > T.si && !T.finished) return;
@@ -211,9 +222,10 @@ function draw(now){
     ctx.fillStyle = 'rgba(63,191,98,.25)'; ctx.beginPath(); ctx.arc(p.x, p.y, 13 + pulse * 7, 0, 7); ctx.fill();
     ctx.fillStyle = '#3FBF62'; ctx.beginPath(); ctx.arc(p.x, p.y, 10, 0, 7); ctx.fill();
     ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p.x, p.y, 3.5, 0, 7); ctx.fill();
+    if (!reducedMotion) redraw();   // titik berdenyut: lanjutkan animasi
   }
-  raf = requestAnimationFrame(draw);
 }
+let rainbowGrad = null;   // dibuat sekali, dipakai ulang setiap gambar
 function rainbow(){
   const g = ctx.createLinearGradient(0, BOX.top, BOX.w, BOX.desc);
   ['#FF5D8F','#FF9F1C','#FFD23F','#3FBF62','#47C9E5','#8B5CF6'].forEach((c, i, a) => g.addColorStop(i / (a.length - 1), c));
@@ -244,11 +256,11 @@ function follow(q){
   const tip = st.pts[T.k], nearTip = Math.hypot(q.x - tip.x, q.y - tip.y) < TOL * 1.2;
   if (best < 0 || (!T.onTrack && !nearTip && best - T.k > REENTRY)) { T.onTrack = false; return; }
   T.onTrack = true;
-  if (best > T.k) { T.k = best; sTick(); }
+  if (best > T.k) { T.k = best; sTick(); redraw(); }
   if (T.k >= st.pts.length - 1 - Math.round(8 / STEP)) strokeDone();
 }
 function strokeDone(){
-  T.si++; T.k = 0; T.onTrack = false; sStroke();
+  T.si++; T.k = 0; T.onTrack = false; sStroke(); redraw();
   if (T.si < T.strokes.length) return;
   // Selesai satu karakter
   T.finished = true; T.si = T.strokes.length - 1;
@@ -263,22 +275,25 @@ function strokeDone(){
   say(`hebat-${T.ch}`, i.done);
   if (count % PER_STAR === 0) {
     stars++; save('stars', stars);
-    setTimeout(() => { toast('⭐ +1 bintang!'); }, 900);
+    starTimer = setTimeout(() => toast('⭐ +1 bintang!'), 900);
   }
 }
 
-let drawing = false;
+// Hanya satu jari yang menulis. Sentuhan lain (telapak tangan, jari kedua) diabaikan.
+let pointer = null, starTimer = 0;
 pad.addEventListener('pointerdown', e => {
-  if (!T) return; drawing = true; T.onTrack = false; pad.setPointerCapture?.(e.pointerId); follow(toBox(e));
+  if (!T || pointer !== null) return;
+  pointer = e.pointerId; T.onTrack = false; pad.setPointerCapture?.(e.pointerId); follow(toBox(e));
 });
 pad.addEventListener('pointermove', e => {
-  if (!drawing) return;
+  if (e.pointerId !== pointer) return;
   const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
   for (const ev of (evs.length ? evs : [e])) follow(toBox(ev));
 });
 // Angkat jari di dekat ujung goresan (sisa paling banyak 20 satuan) juga dihitung selesai.
-const lift = () => {
-  drawing = false;
+const lift = e => {
+  if (e.pointerId !== pointer) return;
+  pointer = null;
   if (!T || T.finished) return;
   const st = T.strokes[T.si];
   if (!st.dot && T.k > 0 && (st.pts.length - 1 - T.k) * STEP <= 20) strokeDone();
@@ -317,6 +332,9 @@ function toast(text){
   const t = $('#toast'); t.textContent = text; t.classList.add('on');
   clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('on'), 2200);
 }
+
+// Untuk scripts/test-trace.mjs: ubah koordinat kotak 120x180 ke koordinat layar.
+window.pensilAjaibTest = { toScreen: (x, y) => { const r = pad.getBoundingClientRect(); return { x: r.left + view.ox + x * view.s, y: r.top + view.oy + y * view.s, s: view.s }; } };
 
 /* ---------- Tombol ---------- */
 $('#homeBtn').addEventListener('click', close);

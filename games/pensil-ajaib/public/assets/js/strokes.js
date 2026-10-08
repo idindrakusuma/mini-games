@@ -5,7 +5,7 @@
    garis dasar 130, ekor bawah 165. Setiap karakter = daftar goresan berurutan,
    tiap goresan = path SVG yang ditulis searah gerakan pensil.
    Goresan "dot X Y" adalah titik (misalnya titik pada i dan j): cukup diketuk. */
-const BOX = { w: 120, h: 180, top: 20, mid: 70, base: 130, desc: 165 };
+const BOX = { w: 120, top: 20, mid: 70, base: 130, desc: 165 };
 
 // Lengkung kecil yang sering dipakai (pusat 60,100; tinggi huruf kecil)
 const BOWL_A = 'M78 77 A28 30 0 1 0 78 123';            // badan a, d, g, q (berlawanan jarum jam)
