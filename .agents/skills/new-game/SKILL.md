@@ -72,7 +72,7 @@ npm run build && (cd dist && python3 -m http.server 8765)
 
 Pakai Playwright dengan viewport HP (misalnya `devices['iPhone 13']`), mode terang dan gelap. Cek hal-hal berikut:
 
-- [ ] Landing page `/` menampilkan kartu baru dengan ikon, dan kartunya membuka `/<slug>/`.
+- [ ] Landing page `/` menampilkan kartu baru dengan ikon, dan kartunya membuka `/<slug>/`. **Buka screenshot-nya:** lebar kartu baru harus sama dengan kartu lain. Class warna kartu (`soap`, `sun`, `leaf`, `water`, `grape`) tidak boleh dipakai untuk elemen lain di landing page.
 - [ ] `/<slug>` tanpa garis miring di akhir tetap jalan (redirect ke `/<slug>/`).
 - [ ] Satu ronde bisa dimainkan sampai layar menang, dan jumlah bintang bertambah setelah "Selesai".
 - [ ] Tidak ada error konsol, dan tidak ada request yang gagal (status ≥ 400).

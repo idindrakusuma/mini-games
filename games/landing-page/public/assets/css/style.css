@@ -38,9 +38,9 @@ a:focus-visible{ outline:4px solid var(--sun); outline-offset:4px; }
 @keyframes drift{ to{ transform:translateX(calc(100vw + 160px)); } }
 
 /* ---------- Matahari ---------- */
-.sun{ display:block; width:clamp(120px, 34vw, 160px); height:auto; margin:0 auto; overflow:visible; }
-.sun .rays{ transform-origin:0 0; animation:spin 24s linear infinite; }
-.sun .eyes{ transform-origin:0 -15px; animation:blink 5s infinite; }
+.hero-sun{ display:block; width:clamp(120px, 34vw, 160px); height:auto; margin:0 auto; overflow:visible; }
+.hero-sun .rays{ transform-origin:0 0; animation:spin 24s linear infinite; }
+.hero-sun .eyes{ transform-origin:0 -15px; animation:blink 5s infinite; }
 @keyframes spin{ to{ transform:rotate(360deg); } }
 @keyframes blink{ 0%,92%,100%{ transform:scaleY(1); } 95%{ transform:scaleY(.1); } }
 
