@@ -17,6 +17,7 @@
 | 🦠 [Pemburu Kuman](games/pemburu-kuman) | Usir kuman lucu sambil cuci tangan dan sikat gigi, pakai kamera. | [/pemburu-kuman/](https://mini-games.indrakusuma.dev/pemburu-kuman/) |
 | 🔤 [Huruf & Angka](games/huruf-angka) | Yuk kenalan sama huruf & angka! | [/huruf-angka/](https://mini-games.indrakusuma.dev/huruf-angka/) |
 | ✏️ [Pensil Ajaib](games/pensil-ajaib) | Tulis huruf, lihat keajaibannya! | [/pensil-ajaib/](https://mini-games.indrakusuma.dev/pensil-ajaib/) |
+| 🔷 [Cocok Bentuk](games/cocok-bentuk) | Yuk, pasangkan bentuk & warna! | [/cocok-bentuk/](https://mini-games.indrakusuma.dev/cocok-bentuk/) |
 
 ## Struktur
 
