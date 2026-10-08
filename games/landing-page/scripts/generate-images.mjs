@@ -68,6 +68,7 @@ for (const [name, size, full] of [['apple-touch-icon.png', 180, 1], ['favicon-32
   const ip = await browser.newPage({ viewport: { width: size, height: size } });
   await ip.setContent(icon(size, full));
   await ip.screenshot({ path: out('icons/' + name), omitBackground: !full });
+  await ip.close();
 }
 await browser.close();
 console.log('OK: og-image.png, apple-touch-icon.png, favicon-32.png');

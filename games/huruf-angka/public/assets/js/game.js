@@ -80,18 +80,23 @@ const sWin = () => [523,659,784,1047].forEach((f,i)=>tone(f,f*1.01,.25,'triangle
 /* ---------- Bintang & tingkat kesulitan (per perangkat) ---------- */
 const load = (k, d) => { try { const v = localStorage.getItem(`${STORE}.${k}`); return v == null ? d : JSON.parse(v); } catch(e) { return d; } };
 const save = (k, v) => { try { localStorage.setItem(`${STORE}.${k}`, JSON.stringify(v)); } catch(e) {} };
-let stars = load('stars', 0);
+// Isi localStorage bisa rusak/beda bentuk: validasi tipe sebelum dipakai.
+const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
+const loadNum = (k, d) => { const v = load(k, d); return Number.isFinite(v) && v >= 0 ? v : d; };
+const loadObj = k => { const v = load(k, {}); return isObj(v) ? v : {}; };
+let stars = loadNum('stars', 0);
 function showStars(){ $('#starsHome').textContent = `⭐ ${stars} bintang`; }
 showStars();
 
 // Tebak: jumlah kartu pilihan. Urutkan: jumlah kartu yang diurutkan.
 const LEVELS = { tebak: [2, 3, 4], urut: [3, 4, 5] };
-const progress = load('level', {});   // { 'huruf-tebak': { lv, streak }, ... }
-const prog = key => (progress[key] ||= { lv: 0, streak: 0 });
+const progress = loadObj('level');   // { 'huruf-tebak': { lv, streak }, ... }
+const prog = key => (isObj(progress[key]) ? progress[key] : (progress[key] = { lv: 0, streak: 0 }));
 // Level dari localStorage bisa rusak atau lebih besar dari daftar level: batasi ke rentang yang ada.
 const levelOf = (key, game) => { const lv = Math.trunc(prog(key).lv) || 0; return Math.max(0, Math.min(LEVELS[game].length - 1, lv)); };
 function adapt(key, game, mistakes){
   const p = prog(key), max = LEVELS[game].length - 1;
+  p.lv = levelOf(key, game); p.streak = Math.trunc(p.streak) || 0;   // normalkan nilai lama/rusak dulu
   if (mistakes <= 1) { if (++p.streak >= 2 && p.lv < max) { p.lv++; p.streak = 0; } }
   else if (mistakes >= 4) { p.lv = Math.max(0, p.lv - 1); p.streak = 0; }
   else p.streak = 0;
@@ -100,8 +105,9 @@ function adapt(key, game, mistakes){
 
 /* ---------- Tata letak kartu ---------- */
 // Cari susunan kolom yang membuat kartu (rasio 3:4) sebesar mungkin di ruang yang ada.
-// Hanya susunan seimbang (4 → 4 atau 2×2, 5 → 5 atau 3+2), jadi tidak ada satu kartu yatim di baris bawah.
-function fit(n, W, H, max, gap = 14){
+// Hanya susunan seimbang: setiap baris terisi penuh kecuali baris terakhir yang kurang paling banyak
+// satu kartu (4 → 4 atau 2×2, 5 → 5 atau 3+2, 3 → 3 atau 2+1). Susunan 4 → 3+1 ditolak.
+function fit(n, W, H, max, gap){
   let best = { size: 0, cols: n };
   for (let rows = 1; rows <= n; rows++) {
     const cols = Math.ceil(n / rows);
@@ -113,9 +119,11 @@ function fit(n, W, H, max, gap = 14){
   return best;
 }
 // Batasi lebar wadah agar kartu benar-benar membungkus sesuai jumlah kolom pilihan fit().
+// Jarak antarkartu dibaca dari CSS (.cards gap), bukan disalin ke sini.
+const gapOf = el => parseFloat(getComputedStyle(el).columnGap) || 0;
 function layout(n, W, H, max){
-  const { size, cols } = fit(n, W, H, max);
-  cardsEl.style.maxWidth = (cols * size + (cols - 1) * 14) + 'px';
+  const gap = gapOf(cardsEl), { size, cols } = fit(n, W, H, max, gap);
+  cardsEl.style.maxWidth = (cols * size + (cols - 1) * gap) + 'px';
   return size;
 }
 function makeCard(item){
@@ -168,14 +176,15 @@ let timer = 0;
 const later = (fn, ms) => { clearTimeout(timer); timer = setTimeout(fn, ms); };
 
 // Kenalan: 5 kartu berurutan per sesi, lanjut dari posisi terakhir (A–E, F–J, ...).
-const kenal = load('kenal', {});
+const kenal = loadObj('kenal');
+const kenalPos = set => { const v = Math.trunc(kenal[set]); return v >= 0 ? v : 0; };
 
 function start(set, game){
   const key = `${set}-${game}`, items = SETS[set];
   const n = game === 'kenal' ? 1 : LEVELS[game][levelOf(key, game)];
   S = { set, game, key, n, q: 0, mistakes: 0, items };
   if (game === 'kenal') {
-    const from = (kenal[set] || 0) % items.length;
+    const from = kenalPos(set) % items.length;
     S.targets = Array.from({ length: ROUND }, (_, i) => items[(from + i) % items.length]);
   }
   else if (game === 'tebak') S.targets = sample(items, ROUND);
@@ -195,13 +204,14 @@ function dots(){
 // Ukuran kartu (dan slot) dari ruang yang tersedia: tinggi papan dikurangi teks soal,
 // jarak antarbaris (22px) dan padding. Dipanggil saat soal dibuat dan saat ukuran papan berubah.
 function sizes(){
-  const board = $('.board'), cs = getComputedStyle(board);
-  const W = Math.min(board.clientWidth - 32, 640);
-  let H = board.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - askEl.offsetHeight - 22;
-  if (S.game === 'kenal') return { size: layout(1, W, H - 84 - 22, 260) };
+  const board = $('.board'), cs = getComputedStyle(board), rowGap = parseFloat(cs.rowGap) || 0;
+  const W = Math.min(board.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight), 640);
+  let H = board.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - askEl.offsetHeight - rowGap;
+  if (S.game === 'kenal') return { size: layout(1, W, H - $('#nav').offsetHeight - rowGap, 260) };
   if (S.game === 'tebak') return { size: layout(S.n, W, H, 180) };
-  const slotSize = Math.floor(Math.min(110, (W - (S.n - 1) * 10) / S.n, H * .22 * 3 / 4));
-  H -= slotSize * 4 / 3 + 22;
+  const slotGap = gapOf(slotsEl);
+  const slotSize = Math.floor(Math.min(110, (W - (S.n - 1) * slotGap) / S.n, H * .22 * 3 / 4));
+  H -= slotSize * 4 / 3 + rowGap;
   return { size: layout(S.n, W, H, 160), slotSize };
 }
 // Rotasi layar / bilah alamat menyusut: ukur ulang kartu yang sedang tampil tanpa mengganti soal.
@@ -304,7 +314,7 @@ function next(){
   if (S.q < ROUND) { question(); return; }
   dots();
   if (S.game === 'kenal') {
-    kenal[S.set] = ((kenal[S.set] || 0) + ROUND) % S.items.length; save('kenal', kenal);
+    kenal[S.set] = (kenalPos(S.set) + ROUND) % S.items.length; save('kenal', kenal);
     const first = S.targets[0].glyph, last = S.targets[ROUND - 1].glyph;
     $('#winText').textContent = `Kamu sudah kenalan dengan ${first} sampai ${last}. Dapat 1 bintang!`;
   } else {

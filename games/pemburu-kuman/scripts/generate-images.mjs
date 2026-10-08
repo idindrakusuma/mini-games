@@ -51,6 +51,7 @@ for (const [name, size, full] of [['icon-512.png', 512, 1], ['icon-192.png', 192
   const ip = await browser.newPage({ viewport: { width: size, height: size } });
   await ip.setContent(icon(size, full));
   await ip.locator('#c').screenshot({ path: out('icons/' + name), omitBackground: true });
+  await ip.close();
 }
 await browser.close();
 console.log('OK: og-image + ikon dibuat ulang');

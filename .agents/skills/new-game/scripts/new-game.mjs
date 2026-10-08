@@ -125,14 +125,15 @@ const card = `    <li>
     </li>
 `;
 const soon = /    <li>\n      <div class="card soon"[\s\S]*?<\/li>\n/;
-if (soon.test(landing)) landing = landing.replace(soon, card);
-else if (landing.includes('  </ul>')) landing = landing.replace('  </ul>', card + '  </ul>');
+// Pakai fungsi sebagai pengganti, supaya pola "$&", "$$" dll. di nama/tagline tidak ikut diproses.
+if (soon.test(landing)) landing = landing.replace(soon, () => card);
+else if (landing.includes('  </ul>')) landing = landing.replace('  </ul>', () => card + '  </ul>');
 else fail('tidak menemukan daftar game di landing page');
 fs.writeFileSync(landingPath, landing);
 
 // ---------- 3. sitemap ----------
 const sitemapPath = path.join(root, 'games/landing-page/public/sitemap.xml');
-const sitemap = fs.readFileSync(sitemapPath, 'utf8').replace('</urlset>', `  <url>
+const sitemap = fs.readFileSync(sitemapPath, 'utf8').replace('</urlset>', () => `  <url>
     <loc>${V.URL}</loc>
     <lastmod>${today}</lastmod>
     <changefreq>monthly</changefreq>
@@ -146,8 +147,9 @@ const readmePath = path.join(root, 'README.md');
 const readme = fs.readFileSync(readmePath, 'utf8');
 const tableEnd = readme.match(/## Daftar Game\n\n(?:\|.*\n)+/);
 if (tableEnd) {
-  const row = `| ${V.EMOJI} [${name}](games/${slug}) | ${V.TAGLINE} | [/${slug}/](${V.URL}) |\n`;
-  fs.writeFileSync(readmePath, readme.replace(tableEnd[0], tableEnd[0] + row));
+  const cell = t => t.replace(/\|/g, '\\|');   // "|" memecah tabel markdown
+  const row = `| ${V.EMOJI} [${cell(name)}](games/${slug}) | ${cell(V.TAGLINE)} | [/${slug}/](${V.URL}) |\n`;
+  fs.writeFileSync(readmePath, readme.replace(tableEnd[0], () => tableEnd[0] + row));
 } else console.warn('! tabel "Daftar Game" di README.md tidak ditemukan, tambahkan baris secara manual');
 
 // ---------- 5. package.json ----------

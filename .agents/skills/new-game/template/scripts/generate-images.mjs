@@ -62,6 +62,7 @@ for (const [name, size, full] of [['icon-512.png', 512, 1], ['icon-192.png', 192
   await ip.setContent(icon(size, full), { waitUntil: 'networkidle' });
   await ip.waitForFunction(() => window.done);
   await ip.locator('#c').screenshot({ path: out('icons/' + name), omitBackground: true });
+  await ip.close();
 }
 await browser.close();
 console.log('OK: og-image + ikon {{SLUG}} dibuat');

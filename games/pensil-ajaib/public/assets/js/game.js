@@ -80,8 +80,12 @@ const sTick = () => { const n = performance.now(); if (n - lastTick < 90) return
 const load = (k, d) => { try { const v = localStorage.getItem(`${STORE}.${k}`); return v == null ? d : JSON.parse(v); } catch(e) { return d; } };
 const save = (k, v) => { try { localStorage.setItem(`${STORE}.${k}`, JSON.stringify(v)); } catch(e) {} };
 // Bintang dari 5 karakter BERBEDA yang selesai (mengulang huruf yang sama tidak menambah).
-let stars = load('stars', 0), pending = new Set(load('pending', []));
-const done = load('done', {});        // { 'A': 1, 'a': 1, ... } — kunci peka huruf besar/kecil
+// Isi localStorage bisa rusak/beda bentuk: validasi tipe sebelum dipakai.
+const loadNum = (k, d) => { const v = load(k, d); return Number.isFinite(v) && v >= 0 ? v : d; };
+const loadArr = k => { const v = load(k, []); return Array.isArray(v) ? v.filter(x => typeof x === 'string') : []; };
+const loadObj = k => { const v = load(k, {}); return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; };
+let stars = loadNum('stars', 0), pending = new Set(loadArr('pending'));
+const done = loadObj('done');        // { 'A': 1, 'a': 1, ... } — kunci peka huruf besar/kecil
 function showStars(){ $('#starsHome').textContent = `⭐ ${stars} bintang`; }
 showStars();
 
@@ -260,8 +264,7 @@ function rainbow(){
 }
 
 /* Jari → titik di kotak 120x180 */
-function toBox(e){
-  const r = pad.getBoundingClientRect();
+function toBox(e, r = pad.getBoundingClientRect()){
   return { x: (e.clientX - r.left - view.ox) / view.s, y: (e.clientY - r.top - view.oy) / view.s };
 }
 function follow(q){
@@ -319,8 +322,8 @@ pad.addEventListener('pointerdown', e => {
 });
 pad.addEventListener('pointermove', e => {
   if (e.pointerId !== pointer) return;
-  const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
-  for (const ev of (evs.length ? evs : [e])) follow(toBox(ev));
+  const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e], r = pad.getBoundingClientRect();   // ukur sekali per event
+  for (const ev of (evs.length ? evs : [e])) follow(toBox(ev, r));
 });
 // Angkat jari di dekat ujung goresan juga dihitung selesai: sisa paling banyak 20 satuan
 // DAN paling banyak 25% panjang goresan (supaya goresan pendek tidak selesai setengah jalan).

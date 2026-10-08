@@ -69,7 +69,7 @@ h1{
 #play.on{ display:flex; flex-direction:column; }
 .hud{
   display:flex; align-items:center; justify-content:space-between; gap:10px;
-  padding:calc(env(safe-area-inset-top,0px) + 12px) 14px 0;
+  padding:calc(env(safe-area-inset-top,0px) + 12px) calc(env(safe-area-inset-right,0px) + 14px) 0 calc(env(safe-area-inset-left,0px) + 14px);
 }
 .round{
   width:56px; height:56px; border-radius:50%; border:0; background:var(--card); color:var(--text);
@@ -85,11 +85,11 @@ h1{
   box-shadow:0 4px 0 rgba(0,0,0,.15); white-space:nowrap;
 }
 .say{ margin:10px 16px 0; min-height:1.4em; text-align:center; font-size:clamp(1.3rem, 6vw, 1.9rem); font-weight:800; }
-.padWrap{ flex:1; position:relative; min-height:0; }
+.padWrap{ flex:1; position:relative; min-height:0; margin:0 env(safe-area-inset-right,0px) 0 env(safe-area-inset-left,0px); }
 #pad{ position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none; }
 .controls{
   display:flex; justify-content:center; gap:36px;
-  padding:6px 16px calc(env(safe-area-inset-bottom,0px) + 18px);
+  padding:6px calc(env(safe-area-inset-right,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 18px) calc(env(safe-area-inset-left,0px) + 16px);
 }
 #fx{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
 .toast{

@@ -92,7 +92,8 @@ cv.addEventListener('pointerdown', e => {
 let winTimer = 0;
 function win(){
   stars++; saveStars(); sWin(); $('#tip').textContent = '';
-  winTimer = setTimeout(() => $('#winSheet').classList.add('on'), 600);
+  // Setelah animasi pecah terakhir selesai, tampilkan layar menang dan hentikan loop gambar (hemat baterai).
+  winTimer = setTimeout(() => { $('#winSheet').classList.add('on'); running = false; cancelAnimationFrame(raf); }, 600);
 }
 
 /* ---------- Tombol ---------- */
