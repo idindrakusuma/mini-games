@@ -223,8 +223,11 @@ function sheet(on){
 
 function dots(){
   // Untuk pembaca layar: progres sebagai progressbar ("2 dari 5").
-  const dotsEl = $('#dots'), total = S.targets.length, now = Math.min(S.q + 1, total);
-  dotsEl.setAttribute('aria-valuemax', total); dotsEl.setAttribute('aria-valuenow', now); dotsEl.setAttribute('aria-valuetext', `Soal ${now} dari ${total}`);
+  const dotsEl = $('#dots'), total = S.targets.length, finished = S.q >= total, now = Math.min(S.q + 1, total);
+  const unit = S.game === 'kenal' ? 'Kartu' : 'Soal';
+  dotsEl.setAttribute('aria-valuemin', 0); dotsEl.setAttribute('aria-valuemax', total);
+  dotsEl.setAttribute('aria-valuenow', finished ? total : S.q);
+  dotsEl.setAttribute('aria-valuetext', finished ? 'Selesai' : `${unit} ${now} dari ${total}`);
   dotsEl.innerHTML = Array.from({ length: S.targets.length }, (_, i) => `<i class="${i < S.q ? 'done' : i === S.q ? 'now' : ''}"></i>`).join('');
 }
 
@@ -249,10 +252,10 @@ function refit(){
   cardsEl.querySelectorAll('.card').forEach(c => c.style.setProperty('--size', size + 'px'));
   if (slotSize) slotsEl.querySelectorAll('.slot').forEach(s => s.style.setProperty('--size', slotSize + 'px'));
 }
-new ResizeObserver(refit).observe($('.board'));
+// Ukur ulang saat papan berubah ukuran ATAU teks soal berganti tinggi (jawaban panjang, font termuat, zoom teks).
+const fitObserver = new ResizeObserver(refit);
+fitObserver.observe($('.board')); fitObserver.observe(askEl);
 // Font Baloo 2 dimuat belakangan (display=swap) dan bisa membuat teks soal berganti baris: ukur ulang.
-document.fonts?.addEventListener?.('loadingdone', refit);
-document.fonts?.ready.then(refit);   // juga untuk browser tanpa event loadingdone
 
 function question(){
   clearTimeout(timer); dots();
@@ -321,7 +324,7 @@ function tapGuess(card, item){
   [...cardsEl.children].forEach(c => { if (c !== card) c.classList.add('gone'); });
   card.classList.remove('hint'); card.classList.add('right', 'pic-on');
   burst(...centerOf(card));
-  askEl.textContent = item.label; refit();   // teks bisa bertambah baris: ukur ulang kartu
+  askEl.textContent = item.label;
   say(`benar-${S.set}-${item.glyph}`, item.reveal);
   later(next, 2400);
 }
@@ -349,7 +352,7 @@ function tapOrder(card, item){
   if (S.step < S.n) { say(`nama-${S.set}-${item.glyph}`, item.say); return; }
   S.locked = true;
   burst(...centerOf(slotsEl));
-  askEl.textContent = S.seq.map(i => i.glyph).join(' ') + ' 🎉'; refit();
+  askEl.textContent = S.seq.map(i => i.glyph).join(' ') + ' 🎉';
   say(`urut-${S.set}-${S.seq[0].glyph}-${S.n}`, S.seq.map(i => i.say).join(', ') + '. Hebat!');
   later(next, 2200 + S.n * 450);
 }

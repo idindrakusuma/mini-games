@@ -50,7 +50,7 @@ main{
   font-size:clamp(44px, 12vw, 76px); line-height:1; margin:10px 0 8px; font-weight:800;
   text-shadow:0 5px 0 rgba(255,255,255,.65);
 }
-@media (prefers-color-scheme: dark){ :root .hero h1{ text-shadow:0 5px 0 rgba(0,0,0,.25); } }
+@media (prefers-color-scheme: dark){ .hero h1{ text-shadow:0 5px 0 rgba(0,0,0,.25); } }
 .lead{ font-size:clamp(20px, 5vw, 26px); color:var(--muted); margin:0 0 24px; font-weight:500; }
 
 .games{

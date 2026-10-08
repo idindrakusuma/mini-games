@@ -399,10 +399,12 @@ pad.addEventListener('pointerdown', e => {
 });
 // Pointerup pena bisa hilang. Pena yang melayang tanpa menekan (buttons === 0) atau keluar dari papan
 // berarti sudah terangkat: lepaskan kuncinya supaya jari bisa menulis lagi.
-const penLifted = e => e.pointerType === 'pen' && e.pointerId === pointer && e.buttons === 0;
-pad.addEventListener('pointerleave', e => { if (penLifted(e)) pointer = null; });
+// Diperlakukan seperti pointerup lewat lift(), jadi aturan "angkat dekat ujung = selesai" tetap berlaku.
+// Ujung pena dianggap terangkat kalau bit tombol utama (tip) tidak aktif, walau tombol samping ditekan.
+const penLifted = e => e.pointerType === 'pen' && e.pointerId === pointer && !(e.buttons & 1);
+pad.addEventListener('pointerleave', e => { if (penLifted(e)) lift(e); });
 pad.addEventListener('pointermove', e => {
-  if (penLifted(e)) { pointer = null; return; }
+  if (penLifted(e)) { lift(e); return; }
   if (e.pointerId !== pointer) return;
   wake();
   const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e], r = pad.getBoundingClientRect();   // ukur sekali per event

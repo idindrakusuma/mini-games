@@ -38,7 +38,8 @@ const FLAGS = { slug: true, name: true, emoji: true, tagline: true, description:
 const args = Object.create(null);
 for (let i = 2; i < process.argv.length; i++) {
   const a = process.argv[i];
-  if (!a.startsWith('--')) continue;
+  // Argumen tanpa flag biasanya nilai multi-kata yang lupa diberi tanda kutip (--name Tebak Hewan).
+  if (!a.startsWith('--')) { console.error(`✗ argumen "${a}" tidak punya flag; nilai yang mengandung spasi perlu diberi tanda kutip`); process.exit(1); }
   let k, v;
   if (a.includes('=')) [k, v] = [a.slice(2, a.indexOf('=')), a.slice(a.indexOf('=') + 1)];
   else {
@@ -134,9 +135,9 @@ function fill(text, file) {
   }
   return out + text.slice(last).replace(PH, x => fillOne(x, file));
 }
-// Di .mjs nilai berada di dalam template literal, jadi "<\/" yang dibuat esc.js kembali jadi "</" saat
-// dievaluasi. Ganti setiap "<" dengan \\u003c: tetap "<" di string JS halaman, tapi tidak pernah
-// bisa membentuk "</script" di HTML yang disusun generator.
+// Emoji di .mjs ditaruh sebagai string JS (tanpa escape HTML) di dalam template literal, jadi "<\/" dari
+// esc.js kembali jadi "</" saat dievaluasi. Ganti "<" dengan \\u003c: tetap "<" di string JS halaman,
+// tapi tidak pernah membentuk "</script" di HTML yang disusun generator.
 const mjsSafe = s => s.replace(/</g, '\\\\u003c');
 function fillOne(m, file) {
   const k = m.slice(2, -2);
@@ -147,7 +148,7 @@ function fillOne(m, file) {
   // Emoji untuk string JS di dalam template literal (fillText(...) di generator gambar): literal JSON yang aman.
   if (k === 'EMOJI_JS') return mjsSafe(esc.js(JSON.stringify(V.EMOJI)));
   // .mjs generator menaruh nilai di dalam HTML di dalam template literal JS
-  if (file.endsWith('.mjs')) return mjsSafe(esc.js(esc.html(vals[k])));
+  if (file.endsWith('.mjs')) return esc.js(esc.html(vals[k]));   // sudah di-escape HTML: tidak ada "<" tersisa
   return kind === 'json' ? esc.json(vals[k]) : kind === 'js' ? esc.js(vals[k]) : esc.html(vals[k]);
 }
 

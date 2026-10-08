@@ -6,9 +6,8 @@
   padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){ --bg:#103A62; --card:#1B4D7E; --text:#FFFDF7; --muted:#BFE3F5; }
+  :root{ --bg:#103A62; --card:#1B4D7E; --text:#FFFDF7; --muted:#BFE3F5; }
 }
-:root[data-theme="dark"]{ --bg:#103A62; --card:#1B4D7E; --text:#FFFDF7; --muted:#BFE3F5; }
 html{ scroll-padding-top:env(safe-area-inset-top,0px); height:100%; }
 *,*::before,*::after{ box-sizing:inherit; }
 body{
