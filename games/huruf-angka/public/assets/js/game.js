@@ -131,6 +131,9 @@ function makeCard(item){
 /* ---------- Konfeti (hanya saat benar) ---------- */
 const fx = $('#fx'), fctx = fx.getContext('2d');
 let parts = [], fxRaf = 0;
+// Hapus pakai ukuran piksel canvas (bukan clientWidth, yang 0 saat layar main disembunyikan).
+function fxClear(){ fctx.save(); fctx.setTransform(1,0,0,1,0,0); fctx.clearRect(0, 0, fx.width, fx.height); fctx.restore(); }
+function fxReset(){ parts = []; cancelAnimationFrame(fxRaf); fxRaf = 0; fxClear(); }
 function burst(x, y, n = 36){
   if (reducedMotion) return;
   const dpr = Math.min(2, devicePixelRatio || 1);
@@ -142,7 +145,7 @@ function burst(x, y, n = 36){
   }
   if (!fxRaf) { let last = performance.now(); const step = now => {
     const dt = Math.min(.05, (now - last) / 1000); last = now;
-    fctx.clearRect(0, 0, fx.clientWidth, fx.clientHeight);
+    fxClear();
     for (const p of parts) {
       p.vy += 700 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt * .9; p.rot += dt * 8;
       fctx.save(); fctx.globalAlpha = Math.max(0, p.life); fctx.translate(p.x, p.y); fctx.rotate(p.rot);
@@ -150,7 +153,7 @@ function burst(x, y, n = 36){
     }
     parts = parts.filter(p => p.life > 0);
     fxRaf = parts.length ? requestAnimationFrame(step) : 0;
-    if (!fxRaf) fctx.clearRect(0, 0, fx.clientWidth, fx.clientHeight);
+    if (!fxRaf) fxClear();
   }; fxRaf = requestAnimationFrame(step); }
 }
 const centerOf = el => { const r = el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
@@ -161,16 +164,23 @@ let S = null;        // state ronde: { set, game, key, n, q, mistakes, targets, 
 let timer = 0;
 const later = (fn, ms) => { clearTimeout(timer); timer = setTimeout(fn, ms); };
 
+// Kenalan: 5 kartu berurutan per sesi, lanjut dari posisi terakhir (A–E, F–J, ...).
+const kenal = load('kenal', {});
+
 function start(set, game){
   const key = `${set}-${game}`, items = SETS[set];
-  const n = LEVELS[game][prog(key).lv];
+  const n = game === 'kenal' ? 1 : LEVELS[game][prog(key).lv];
   S = { set, game, key, n, q: 0, mistakes: 0, items };
-  if (game === 'tebak') S.targets = sample(items, ROUND);
+  if (game === 'kenal') {
+    const from = (kenal[set] || 0) % items.length;
+    S.targets = Array.from({ length: ROUND }, (_, i) => items[(from + i) % items.length]);
+  }
+  else if (game === 'tebak') S.targets = sample(items, ROUND);
   else {
     const starts = shuffle([...Array(items.length - n + 1).keys()]);
     S.targets = Array.from({ length: ROUND }, (_, i) => starts[i % starts.length]);
   }
-  $('#winSheet').classList.remove('on');
+  $('#winSheet').classList.remove('on'); fxReset();
   play.classList.add('on');
   question();
 }
@@ -182,13 +192,22 @@ function dots(){
 function question(){
   clearTimeout(timer); dots();
   cardsEl.innerHTML = ''; slotsEl.innerHTML = ''; S.locked = false; S.wrong = 0;
-  askEl.textContent = S.game === 'tebak' ? `🔊 Mana ${NOUN[S.set]}nya?`
+  $('#nav').hidden = S.game !== 'kenal';
+  askEl.textContent = S.game === 'kenal' ? S.targets[S.q].label
+    : S.game === 'tebak' ? `🔊 Mana ${NOUN[S.set]}nya?`
     : S.set === 'angka' ? 'Urutkan dari yang terkecil!' : 'Urutkan dari yang pertama!';
   // Ruang untuk kartu = tinggi papan dikurangi teks soal, jarak antarbaris (22px), dan padding.
   const board = $('.board'), cs = getComputedStyle(board);
   const W = Math.min(board.clientWidth - 32, 640);
   let H = board.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - askEl.offsetHeight - 22;
-  if (S.game === 'tebak') {
+  if (S.game === 'kenal') {
+    const item = S.targets[S.q];
+    const size = layout(1, W, H - 84 - 22, 260);
+    const c = makeCard(item); c.style.setProperty('--size', size + 'px'); c.classList.add('show');
+    c.addEventListener('click', ask);
+    cardsEl.append(c);
+    $('#prevBtn').disabled = S.q === 0;
+  } else if (S.game === 'tebak') {
     const target = S.targets[S.q];
     const others = sample(S.items.filter(i => i !== target), S.n - 1);
     S.target = target; S.choices = shuffle([target, ...others]);
@@ -216,7 +235,8 @@ function question(){
 }
 
 function ask(){
-  if (S.game === 'tebak') say(`mana-${S.set}-${S.target.glyph}`, `Mana ${NOUN[S.set]} ${S.target.say}?`);
+  if (S.game === 'kenal') { const it = S.targets[S.q]; say(`benar-${S.set}-${it.glyph}`, it.reveal); }
+  else if (S.game === 'tebak') say(`mana-${S.set}-${S.target.glyph}`, `Mana ${NOUN[S.set]} ${S.target.say}?`);
   else say('urutkan', S.set === 'angka' ? 'Urutkan angkanya, dari yang paling kecil!' : 'Urutkan hurufnya, dari yang pertama!');
 }
 
@@ -267,7 +287,14 @@ function next(){
   S.q++;
   if (S.q < ROUND) { question(); return; }
   dots();
-  adapt(S.key, S.game, S.mistakes);
+  if (S.game === 'kenal') {
+    kenal[S.set] = ((kenal[S.set] || 0) + ROUND) % S.items.length; save('kenal', kenal);
+    const first = S.targets[0].glyph, last = S.targets[ROUND - 1].glyph;
+    $('#winText').textContent = `Kamu sudah kenalan dengan ${first} sampai ${last}. Dapat 1 bintang!`;
+  } else {
+    adapt(S.key, S.game, S.mistakes);
+    $('#winText').textContent = 'Kamu dapat 1 bintang!';
+  }
   stars++; save('stars', stars); sWin();
   const c = $('.board').getBoundingClientRect();
   burst(c.left + c.width / 2, c.top + c.height / 3, 80);
@@ -276,18 +303,46 @@ function next(){
 }
 
 function stop(){
-  clearTimeout(timer); hush(); S = null;
+  clearTimeout(timer); hush(); fxReset(); S = null;
   play.classList.remove('on'); $('#winSheet').classList.remove('on');
   showStars();
 }
 
-/* ---------- Tombol ---------- */
-let lastMode = null;
-document.querySelectorAll('.mode').forEach(b => b.addEventListener('click', () => {
-  audio(); lastMode = [b.dataset.set, b.dataset.game]; start(...lastMode);
+/* ---------- Kenalan: maju/mundur ---------- */
+function step(d){
+  if (!S || S.game !== 'kenal' || S.locked) return;
+  if (d < 0 && S.q > 0) { S.q--; question(); }
+  else if (d > 0) {
+    if (S.q < ROUND - 1) { S.q++; question(); }
+    else { S.locked = true; next(); }
+  }
+}
+$('#prevBtn').addEventListener('click', () => step(-1));
+$('#nextBtn').addEventListener('click', () => step(1));
+// Geser kartu ke kiri/kanan
+let sx = null;
+cardsEl.addEventListener('pointerdown', e => { sx = e.clientX; });
+cardsEl.addEventListener('pointerup', e => {
+  if (sx == null) return; const dx = e.clientX - sx; sx = null;
+  if (Math.abs(dx) > 60) step(dx < 0 ? 1 : -1);
+});
+
+/* ---------- Layar: awal → menu (Huruf/Angka) → main ---------- */
+const NAMES = { huruf: ['Huruf', 'A'], angka: ['Angka', '1'] };
+let curSet = 'huruf', lastGame = null;
+function showMenu(set){
+  curSet = set;
+  $('#menuTitle').textContent = NAMES[set][0];
+  $('#menuGlyph').textContent = NAMES[set][1];
+  $('#menu').hidden = false;
+}
+document.querySelectorAll('#home .mode').forEach(b => b.addEventListener('click', () => { audio(); showMenu(b.dataset.set); }));
+document.querySelectorAll('#menu .mode').forEach(b => b.addEventListener('click', () => {
+  audio(); lastGame = b.dataset.game; start(curSet, lastGame);
 }));
+$('#menuBack').addEventListener('click', () => { $('#menu').hidden = true; });
 $('#speakBtn').addEventListener('click', () => { if (S && !S.locked) ask(); });
 $('#homeBtn').addEventListener('click', stop);
-$('#againBtn').addEventListener('click', () => start(...lastMode));
+$('#againBtn').addEventListener('click', () => start(curSet, lastGame));
 $('#doneBtn').addEventListener('click', stop);
 })();

@@ -16,14 +16,19 @@ Flash card huruf dan angka untuk balita. Ronde singkat, tampilan tenang, tanpa t
 
 ## Cara Main
 
-Pilih salah satu dari empat mode. Satu ronde berisi 5 soal tanpa batas waktu, dan setiap ronde yang selesai memberi 1 bintang.
+Pilih **Huruf** atau **Angka**, lalu pilih mode. Satu sesi berisi 5 kartu tanpa batas waktu, dan setiap sesi yang selesai memberi 1 bintang. Urutan yang disarankan: Kenalan → Tebak → Urutkan.
 
-### 🔤 Tebak Huruf / 🔢 Tebak Angka
+### 👀 Kenalan
+1. Satu kartu besar tampil lengkap dengan gambarnya, lalu dibacakan ("A. Apel!").
+2. Ketuk ▶ atau geser kartu untuk lanjut, ◀ untuk mundur. Ketuk kartu untuk mendengar lagi.
+3. Setiap sesi berisi 5 kartu berurutan. Sesi berikutnya melanjutkan dari kartu terakhir (A–E, lalu F–J, dan seterusnya).
+
+### 🎯 Tebak
 1. Dengarkan soalnya, misalnya "Mana huruf be?". Tombol 🔊 mengulang suara.
 2. Ketuk kartu yang benar.
 3. Kalau benar, gambar pendamping muncul ("B, Bola!" ⚽, atau tiga 🐥 untuk angka 3).
 
-### 🧩 Urutkan Huruf / Urutkan Angka
+### 🧩 Urutkan
 1. Beberapa kartu berurutan muncul teracak.
 2. Ketuk dari yang pertama (atau angka terkecil). Kartu pindah ke baris jawaban dan namanya dibacakan.
 

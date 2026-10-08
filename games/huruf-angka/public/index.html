@@ -65,15 +65,26 @@
   <h1>Huruf &amp; Angka</h1>
   <p class="lead">Yuk kenalan sama huruf &amp; angka!</p>
   <div class="modes">
-    <button class="mode m1" data-set="huruf" data-game="tebak"><span class="ico" aria-hidden="true">🔤</span><b>Tebak Huruf</b></button>
-    <button class="mode m2" data-set="angka" data-game="tebak"><span class="ico" aria-hidden="true">🔢</span><b>Tebak Angka</b></button>
-    <button class="mode m3" data-set="huruf" data-game="urut"><span class="ico" aria-hidden="true">🧩</span><b>Urutkan Huruf</b></button>
-    <button class="mode m4" data-set="angka" data-game="urut"><span class="ico" aria-hidden="true">🧩</span><b>Urutkan Angka</b></button>
+    <button class="mode m1" data-set="huruf"><span class="ico" aria-hidden="true">🔤</span><b>Huruf</b><small>A sampai Z</small></button>
+    <button class="mode m2" data-set="angka"><span class="ico" aria-hidden="true">🔢</span><b>Angka</b><small>1 sampai 10</small></button>
   </div>
   <div class="stars" id="starsHome">⭐ 0 bintang</div>
-  <p class="note">Untuk ayah dan bunda: satu ronde berisi 5 soal tanpa batas waktu. Nyalakan suara HP, karena soalnya dibacakan. Tingkat kesulitan menyesuaikan sendiri.</p>
+  <p class="note">Untuk ayah dan bunda: mulai dari Kenalan, lalu Tebak dan Urutkan. Satu ronde berisi 5 kartu tanpa batas waktu. Nyalakan suara HP, karena soalnya dibacakan. Tingkat kesulitan menyesuaikan sendiri.</p>
   <p class="back"><a href="../">← Taman Bermain</a></p>
   <p class="credit">Dibuat oleh <a href="https://indrakusuma.dev" rel="author">Indra Kusuma</a></p>
+</main>
+
+<main id="menu" hidden>
+  <div class="menu-top">
+    <button class="round" id="menuBack" aria-label="Kembali">⬅️</button>
+  </div>
+  <div class="menu-card" id="menuGlyph" aria-hidden="true">A</div>
+  <h1 id="menuTitle">Huruf</h1>
+  <div class="list">
+    <button class="mode wide m3" data-game="kenal"><span class="ico" aria-hidden="true">👀</span><span><b>Kenalan</b><small>Lihat dan dengarkan</small></span></button>
+    <button class="mode wide m1" data-game="tebak"><span class="ico" aria-hidden="true">🎯</span><span><b>Tebak</b><small>Dengar, lalu cari</small></span></button>
+    <button class="mode wide m4" data-game="urut"><span class="ico" aria-hidden="true">🧩</span><span><b>Urutkan</b><small>Susun berurutan</small></span></button>
+  </div>
 </main>
 
 <section id="play" aria-label="Main">
@@ -86,6 +97,10 @@
     <p class="ask" id="ask" aria-live="polite"></p>
     <div class="slots" id="slots"></div>
     <div class="cards" id="cards"></div>
+    <div class="nav" id="nav" hidden>
+      <button class="round big" id="prevBtn" aria-label="Sebelumnya">◀</button>
+      <button class="round big" id="nextBtn" aria-label="Berikutnya">▶</button>
+    </div>
   </div>
   <canvas id="fx" aria-hidden="true"></canvas>
 
