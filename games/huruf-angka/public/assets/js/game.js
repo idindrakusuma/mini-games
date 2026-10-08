@@ -111,13 +111,15 @@ function adapt(key, game, mistakes){
 
 /* ---------- Tata letak kartu ---------- */
 // Cari susunan kolom yang membuat kartu (rasio 3:4) sebesar mungkin di ruang yang ada.
-// Hanya susunan seimbang: setiap baris terisi penuh kecuali baris terakhir yang kurang paling banyak
-// satu kartu (4 → 4 atau 2×2, 5 → 5 atau 3+2, 3 → 3 atau 2+1). Susunan 4 → 3+1 ditolak.
+// Jumlah baris dicoba dari 1 sampai n (termasuk satu kolom); hanya susunan yang setiap barisnya terisi
+// penuh kecuali baris terakhir yang kurang paling banyak satu kartu (mis. 4 → 4, 2×2, atau 1×4;
+// 5 → 5, 3+2, atau 2+2+1). Susunan 4 → 3+1 ditolak. Baris tambahan hanya dipilih kalau kartu jadi jauh lebih besar.
 function fit(n, W, H, max, gap){
   let best = { size: 0, cols: n };
   for (let rows = 1; rows <= n; rows++) {
     const cols = Math.ceil(n / rows);
     if (Math.ceil(n / cols) !== rows) continue;
+    if (n - (rows - 1) * cols < cols - 1) continue;   // baris terakhir kurang lebih dari satu kartu (mis. 7 → 3+3+1)
     const w = Math.min(max, (W - (cols - 1) * gap) / cols, ((H - (rows - 1) * gap) / rows) * 3 / 4);
     // Baris lebih sedikit lebih enak dilihat; tambah baris hanya kalau kartu jadi jauh lebih besar.
     if (w > best.size * 1.25) best = { size: Math.floor(w), cols };
@@ -220,7 +222,10 @@ function sheet(on){
 }
 
 function dots(){
-  $('#dots').innerHTML = Array.from({ length: S.targets.length }, (_, i) => `<i class="${i < S.q ? 'done' : i === S.q ? 'now' : ''}"></i>`).join('');
+  // Untuk pembaca layar: progres sebagai progressbar ("2 dari 5").
+  const dotsEl = $('#dots'), total = S.targets.length, now = Math.min(S.q + 1, total);
+  dotsEl.setAttribute('aria-valuemax', total); dotsEl.setAttribute('aria-valuenow', now); dotsEl.setAttribute('aria-valuetext', `Soal ${now} dari ${total}`);
+  dotsEl.innerHTML = Array.from({ length: S.targets.length }, (_, i) => `<i class="${i < S.q ? 'done' : i === S.q ? 'now' : ''}"></i>`).join('');
 }
 
 // Ukuran kartu (dan slot) dari ruang yang tersedia: tinggi papan dikurangi teks soal,
@@ -245,6 +250,9 @@ function refit(){
   if (slotSize) slotsEl.querySelectorAll('.slot').forEach(s => s.style.setProperty('--size', slotSize + 'px'));
 }
 new ResizeObserver(refit).observe($('.board'));
+// Font Baloo 2 dimuat belakangan (display=swap) dan bisa membuat teks soal berganti baris: ukur ulang.
+document.fonts?.addEventListener?.('loadingdone', refit);
+document.fonts?.ready.then(refit);   // juga untuk browser tanpa event loadingdone
 
 function question(){
   clearTimeout(timer); dots();
@@ -428,19 +436,4 @@ $('#homeBtn').addEventListener('click', stop);
 $('#againBtn').addEventListener('click', () => start(curSet, lastGame));
 $('#doneBtn').addEventListener('click', stop);
 
-/* ---------- theme-color ikut data-theme (kalau dipakai), sama seperti CSS ---------- */
-(function syncThemeColor(){
-  const metas = [...document.querySelectorAll('meta[name="theme-color"]')];
-  metas.forEach(m => { m.dataset.media ??= m.getAttribute('media') || ''; });
-  const apply = () => {
-    const t = document.documentElement.dataset.theme;
-    metas.forEach(m => {
-      const isDarkMeta = m.dataset.media.includes('dark');
-      if (!t) m.setAttribute('media', m.dataset.media);            // ikuti pengaturan perangkat
-      else m.setAttribute('media', (t === 'dark') === isDarkMeta ? 'all' : 'not all');
-    });
-  };
-  new MutationObserver(apply).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-  apply();
-})();
 })();

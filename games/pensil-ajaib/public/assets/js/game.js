@@ -184,11 +184,10 @@ new ResizeObserver(() => { if (T) { resize(); drawNow(); } }).observe(pad);
   }, { once: true });
 })();
 
-// Mode gelap: ikuti data-theme kalau ada, kalau tidak ikuti pengaturan perangkat (sama seperti CSS).
+// Mode gelap: ikuti pengaturan perangkat (sama seperti CSS).
 const darkMQ = matchMedia('(prefers-color-scheme: dark)');
-const isDark = () => { const t = document.documentElement.dataset.theme; return t ? t === 'dark' : darkMQ.matches; };
+const isDark = () => darkMQ.matches;
 darkMQ.addEventListener?.('change', () => { colors = null; invalidate(); });
-new MutationObserver(() => { colors = null; invalidate(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
 // Gambar hanya saat ada yang berubah. Loop animasi hanya berjalan selama titik hijau berdenyut.
 function redraw(){ if (T && !raf) raf = requestAnimationFrame(draw); }
@@ -384,9 +383,10 @@ pad.addEventListener('pointerdown', e => {
   // Hanya tombol utama (klik kiri / sentuhan / pena).
   if (!T || e.button !== 0) return;
   // Sentuhan seukuran telapak tangan diabaikan (jika browser melaporkan ukuran sentuhan).
-  // Ambang 60px pada salah satu sisi: ujung jari (biasanya < 40px) tetap diterima, sisi tangan
-  // yang panjang-sempit (mis. 120x40) dan telapak tangan ditolak.
-  if (e.pointerType === 'touch' && Math.max(e.width, e.height) > 60) return;
+  // Tolak kalau LUAS kontak > 60x60 (3600px², telapak tangan) ATAU salah satu sisi > 90px (sisi tangan
+  // yang tipis-panjang, mis. 130x27). Jari balita yang ditekan rata dan agak lonjong (mis. 65x35)
+  // tetap diterima. Browser yang tidak melaporkan ukuran memberi 1x1, jadi selalu diterima.
+  if (e.pointerType === 'touch' && (e.width * e.height > 3600 || Math.max(e.width, e.height) > 90)) return;
   // Pointer utama baru boleh mengambil alih kunci (supaya tidak macet kalau pointerup hilang),
   // tapi sentuhan tidak boleh merebut dari pena (telapak tangan saat menulis dengan stylus).
   if (pointer !== null && (!e.isPrimary || (pointerType === 'pen' && e.pointerType !== 'pen'))) return;
@@ -461,19 +461,4 @@ $('#speakBtn').addEventListener('click', () => { if (T) { const i = info(T.ch); 
 $('#redoBtn').addEventListener('click', () => { if (T) open(T.ch); });
 $('#nextBtn').addEventListener('click', () => { if (T) nextChar(); });
 
-/* ---------- theme-color ikut data-theme (kalau dipakai), sama seperti CSS ---------- */
-(function syncThemeColor(){
-  const metas = [...document.querySelectorAll('meta[name="theme-color"]')];
-  metas.forEach(m => { m.dataset.media ??= m.getAttribute('media') || ''; });
-  const apply = () => {
-    const t = document.documentElement.dataset.theme;
-    metas.forEach(m => {
-      const isDarkMeta = m.dataset.media.includes('dark');
-      if (!t) m.setAttribute('media', m.dataset.media);            // ikuti pengaturan perangkat
-      else m.setAttribute('media', (t === 'dark') === isDarkMeta ? 'all' : 'not all');
-    });
-  };
-  new MutationObserver(apply).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-  apply();
-})();
 })();
