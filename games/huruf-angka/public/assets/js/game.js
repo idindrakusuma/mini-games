@@ -204,7 +204,7 @@ function question(){
     const item = S.targets[S.q];
     const size = layout(1, W, H - 84 - 22, 260);
     const c = makeCard(item); c.style.setProperty('--size', size + 'px'); c.classList.add('show');
-    c.addEventListener('click', () => { if (!swiped) ask(); });
+    c.addEventListener('click', () => { if (swiped) { swiped = false; return; } ask(); });
     cardsEl.append(c);
     $('#prevBtn').disabled = S.q === 0;
   } else if (S.game === 'tebak') {
@@ -321,12 +321,15 @@ $('#prevBtn').addEventListener('click', () => step(-1));
 $('#nextBtn').addEventListener('click', () => step(1));
 // Geser kartu ke kiri/kanan
 // Geser juga memicu "click" setelah pointerup; tandai supaya kartu tidak ikut membacakan ulang.
-let sx = null, swiped = false;
-cardsEl.addEventListener('pointerdown', e => { sx = e.clientX; swiped = false; });
+// Penanda dibersihkan di tugas berikutnya, jadi ketukan/Enter sesudahnya tetap membacakan kartu.
+// Hanya jari yang memulai geseran yang dihitung (#cards memakai touch-action: pan-y).
+let sx = null, sid = null, swiped = false;
+cardsEl.addEventListener('pointerdown', e => { if (sid !== null) return; sx = e.clientX; sid = e.pointerId; swiped = false; });
 cardsEl.addEventListener('pointerup', e => {
-  if (sx == null) return; const dx = e.clientX - sx; sx = null;
-  if (Math.abs(dx) > 60) { swiped = true; step(dx < 0 ? 1 : -1); }
+  if (e.pointerId !== sid) return; const dx = e.clientX - sx; sx = sid = null;
+  if (Math.abs(dx) > 60) { swiped = true; setTimeout(() => { swiped = false; }, 0); step(dx < 0 ? 1 : -1); }
 });
+cardsEl.addEventListener('pointercancel', e => { if (e.pointerId === sid) sx = sid = null; });
 
 /* ---------- Layar: awal → menu (Huruf/Angka) → main ---------- */
 const NAMES = { huruf: ['Huruf', 'A'], angka: ['Angka', '1'] };

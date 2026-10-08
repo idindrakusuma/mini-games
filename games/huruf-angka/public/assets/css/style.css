@@ -95,6 +95,7 @@ h1{
 .ask{ margin:0; font-size:clamp(1.3rem, 6vw, 2rem); font-weight:800; text-align:center; min-height:1.3em; }
 .cards, .slots{ display:flex; flex-wrap:wrap; justify-content:center; gap:14px; width:100%; max-width:640px; }
 .slots{ gap:10px; flex-wrap:nowrap; }
+#cards{ touch-action:pan-y; }   /* geser kiri/kanan di Kenalan ditangani game, bukan browser */
 .slots:empty{ display:none; }
 .nav{ display:flex; gap:28px; }
 .round.big{ width:84px; height:84px; font-size:2.2rem; background:var(--accent); color:var(--btn-ink); box-shadow:0 6px 0 rgba(27,42,107,.25); }

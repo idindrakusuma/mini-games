@@ -37,7 +37,9 @@ function resize(){
   cv.width = Math.round(CW*dpr); cv.height = Math.round(CH*dpr);
   ctx.setTransform(dpr,0,0,dpr,0,0);
 }
-addEventListener('resize', () => { if(running) resize(); });
+// Ukur ulang setiap kali ukuran canvas berubah (rotasi, teks HUD berganti baris, font termuat),
+// bukan hanya saat jendela di-resize, supaya sentuhan tetap pas dengan gambar.
+new ResizeObserver(() => { if(running) resize(); }).observe(cv);
 
 /* ---------- Gameplay (ganti bagian ini) ---------- */
 const GOAL = 5;

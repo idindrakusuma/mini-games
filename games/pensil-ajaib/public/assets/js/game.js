@@ -32,14 +32,14 @@ const cap = w => w[0].toUpperCase() + w.slice(1);
 function info(ch){
   if (/\d/.test(ch)) {
     const n = +ch;
-    return { kind: 'angka', say: NUMS[n], ask: `Ayo tulis angka ${NUMS[n]}!`, done: `Hebat! ${cap(NUMS[n])}!`,
+    return { ask: `Ayo tulis angka ${NUMS[n]}!`, done: `Hebat! ${cap(NUMS[n])}!`,
              label: `${ch}, ${NUMS[n]}! ${NUM_PICS[n].repeat(n)}`.trim() };
   }
   const [say, word, pic] = WORDS[ch.toUpperCase()];
   const size = ch === ch.toUpperCase() ? 'besar' : 'kecil';
-  return { kind: 'huruf', say, ask: `Ayo tulis huruf ${say} ${size}!`,
+  return { ask: `Ayo tulis huruf ${say} ${size}!`,
            done: word ? `Hebat! ${say}. ${word}!` : `Hebat! Huruf ${say}!`,
-           label: word ? `${ch} · ${word} ${pic}` : `${ch} · Hebat! ⭐`, pic };
+           label: word ? `${ch} · ${word} ${pic}` : `${ch} · Hebat! ⭐` };
 }
 
 /* ---------- Suara ----------
@@ -125,20 +125,24 @@ const ACCENT = getComputedStyle(document.documentElement).getPropertyValue('--ac
 
 function resize(){
   const dpr = Math.min(2, devicePixelRatio || 1), W = pad.clientWidth, H = pad.clientHeight;
-  pad.width = Math.round(W * dpr); pad.height = Math.round(H * dpr);
+  const bw = Math.round(W * dpr), bh = Math.round(H * dpr);
+  if (pad.width !== bw || pad.height !== bh) { pad.width = bw; pad.height = bh; }   // hindari alokasi ulang yang tidak perlu
   const s = Math.min(W / BOX.w, H / (BOX.desc + 15 - (BOX.top - 15))) * .96;
   view = { s, dpr, ox: (W - BOX.w * s) / 2, oy: (H - (BOX.desc + 15 - (BOX.top - 15)) * s) / 2 - (BOX.top - 15) * s };
 }
 // Ukur ulang setiap kali ukuran papan berubah (rotasi layar, teks di atasnya berganti baris, font termuat).
-new ResizeObserver(() => { if (T) { resize(); redraw(); } }).observe(pad);
+// Gambar langsung (bukan di frame berikutnya) supaya papan tidak berkedip kosong.
+new ResizeObserver(() => { if (T) { resize(); drawNow(); } }).observe(pad);
 
 // Mode gelap: ikuti data-theme kalau ada, kalau tidak ikuti pengaturan perangkat (sama seperti CSS).
 const darkMQ = matchMedia('(prefers-color-scheme: dark)');
 const isDark = () => { const t = document.documentElement.dataset.theme; return t ? t === 'dark' : darkMQ.matches; };
 darkMQ.addEventListener?.('change', () => redraw());
+new MutationObserver(() => redraw()).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
 // Gambar hanya saat ada yang berubah. Loop animasi hanya berjalan selama titik hijau berdenyut.
 function redraw(){ if (T && !raf) raf = requestAnimationFrame(draw); }
+function drawNow(){ cancelAnimationFrame(raf); raf = 0; draw(performance.now()); }
 
 function open(ch){
   T = { ch, strokes: strokesOf(ch), si: 0, k: 0, finished: false, onTrack: false };
@@ -149,7 +153,7 @@ function open(ch){
   $('#nextBtn').classList.remove('ready');
   play.classList.add('on'); fxReset(); resize();
   say(`tulis-${ch}`, i.ask);
-  cancelAnimationFrame(raf); raf = 0; redraw();
+  drawNow();
 }
 function close(){
   T = null; cancelAnimationFrame(raf); raf = 0; pointer = null; hush(); fxReset();
@@ -283,7 +287,9 @@ function strokeDone(){
 let pointer = null, starTimer = 0;
 pad.addEventListener('pointerdown', e => {
   if (!T || pointer !== null) return;
-  pointer = e.pointerId; T.onTrack = false; pad.setPointerCapture?.(e.pointerId); follow(toBox(e));
+  pointer = e.pointerId; T.onTrack = false;
+  try { pad.setPointerCapture(e.pointerId); } catch (err) { /* pointer sudah tidak aktif: abaikan */ }
+  follow(toBox(e));
 });
 pad.addEventListener('pointermove', e => {
   if (e.pointerId !== pointer) return;
@@ -299,6 +305,8 @@ const lift = e => {
   if (!st.dot && T.k > 0 && (st.pts.length - 1 - T.k) * STEP <= 20) strokeDone();
 };
 pad.addEventListener('pointerup', lift); pad.addEventListener('pointercancel', lift);
+// Kalau browser melepas capture tanpa pointerup (misalnya gestur sistem), lepaskan kunci satu jari.
+pad.addEventListener('lostpointercapture', e => { if (e.pointerId === pointer) pointer = null; });
 
 /* ---------- Konfeti & toast ---------- */
 const fx = $('#fx'), fctx = fx.getContext('2d');
