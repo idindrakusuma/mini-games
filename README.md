@@ -27,9 +27,10 @@ games/
     public/
   pemburu-kuman/       → disajikan di /pemburu-kuman/
     public/            ← yang di-deploy
-    scripts/           ← alat bantu (generate gambar, video promo)
-    promo/
-scripts/build.mjs      ← menyusun games/*/public ke dist/
+    scripts/           ← alat bantu (generate gambar, unduh model)
+    promo/             ← video promo (salinan dari npm run promo)
+scripts/build.mjs      ← menyusun games/*/public ke dist/ (+ ?v=<hash> untuk CSS/JS)
+scripts/promo/         ← rekam gameplay & render video promo Threads
 vercel.json
 AGENTS.md               ← aturan untuk AI agent & kontributor
 .agents/skills/new-game ← skill: workflow membuat game baru

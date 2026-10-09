@@ -17,7 +17,7 @@ body{
   -webkit-tap-highlight-color:transparent; overflow:hidden;
 }
 button{ font:inherit; cursor:pointer; }
-button:focus-visible{ outline:4px solid var(--sun); outline-offset:3px; }
+button:focus-visible, a:focus-visible{ outline:4px solid var(--sun); outline-offset:3px; }
 
 /* ---------- Home ---------- */
 #home{
@@ -52,9 +52,10 @@ h1{
   margin-top:22px; background:var(--card); border-radius:999px; padding:8px 20px;
   font-size:1.2rem; font-weight:700; box-shadow:0 4px 0 rgba(27,42,107,.15);
 }
-.note{ margin-top:auto; padding-top:22px; font-size:.95rem; color:var(--muted); max-width:26em; line-height:1.4; }
-.credit{ margin:8px 0 0; font-size:.9rem; color:var(--muted); }
-.credit a{ color:var(--text); font-weight:700; }
+.note{ margin:22px 0 0; font-size:.95rem; color:var(--muted); max-width:26em; line-height:1.4; }
+.back{ margin:auto 0 0; padding-top:24px; font-size:1.05rem; }
+.back a, .credit a{ color:var(--text); font-weight:700; }
+.credit{ margin:6px 0 0; font-size:.9rem; color:var(--muted); }
 
 /* ---------- Play ---------- */
 #play{ position:fixed; inset:0; background:#0E2D4D; display:none; touch-action:none; }

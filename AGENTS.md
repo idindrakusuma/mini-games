@@ -36,7 +36,7 @@ vercel.json
 - **`localStorage`**: semua game berbagi satu domain, jadi key wajib diberi prefix nama game, misalnya `pemburuKuman.stars`.
 - **PWA per game**: tiap game punya `site.webmanifest` sendiri dengan `start_url` dan `scope` `"./"`, dan ikon dengan path relatif.
 - **SEO**: URL canonical, `og:url`, dan `og:image` memakai URL lengkap `https://mini-games.indrakusuma.dev/<nama-game>/...`. `robots.txt` dan `sitemap.xml` hanya ada satu, di `games/landing-page/public/`.
-- **Cache**: CSS/JS selalu divalidasi ulang ke server (`max-age=0`; `?v=5` di stylesheet landing page sengaja dipertahankan untuk browser yang masih menyimpan versi lama dari sebelum aturan ini), sedangkan gambar dan ikon di `assets/images|icons/` di-cache 1 hari. Kalau mengganti gambar dengan nama file yang sama, tambahkan `?v=N` di referensinya. File di `assets/vendor/` (library pihak ketiga, misalnya model MediaPipe) di-cache 1 tahun, jadi versinya wajib ada di nama file atau folder.
+- **Cache**: `scripts/build.mjs` otomatis menambahkan `?v=<hash isi file>` ke setiap `<link href="….css">` dan `<script src="….js">` lokal di HTML hasil build, jadi jangan tulis `?v=` sendiri untuk CSS/JS. URL ber-`?v=` di-cache 1 tahun (`immutable`), dan CSS/JS tanpa `?v=` (misalnya yang dimuat dari JS) divalidasi ulang ke server (`max-age=0`). Gambar dan ikon di `assets/images|icons/` di-cache 1 hari. Kalau mengganti gambar dengan nama file yang sama, tambahkan `?v=N` di referensinya. File di `assets/vendor/` (library pihak ketiga, misalnya model MediaPipe) di-cache 1 tahun, jadi versinya wajib ada di nama file atau folder.
 - Nama folder game memakai **kebab-case** dan langsung menjadi path URL-nya.
 
 ## Menambah game baru
@@ -56,6 +56,7 @@ npm run huruf-angka:images
 npm run pensil-ajaib:images
 npm run cocok-bentuk:images
 npm run pemburu-kuman:vendor   # unduh ulang MediaPipe Face Landmarker untuk mode gigi
+npm run promo                  # rekam gameplay asli & render video promo Threads ke promo/threads/ (butuh Playwright + ffmpeg)
 ```
 
 Kalau Playwright tidak bisa mengunduh Chromium sendiri, set `CHROMIUM_PATH` ke binary Chromium yang ada.
