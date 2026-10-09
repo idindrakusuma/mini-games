@@ -150,6 +150,8 @@ const files = [];
   for (const e of fs.readdirSync(src, { withFileTypes: true })) {
     const s = path.join(src, e.name), d = path.join(dest, e.name);
     if (e.isDirectory()) collect(s, d);
+    // file biner (font, gambar) disalin apa adanya; hanya file teks yang diisi placeholder-nya
+    else if (/\.(woff2?|png|jpe?g|webp|ico)$/i.test(e.name)) files.push([d, fs.readFileSync(s)]);
     else files.push([d, fill(fs.readFileSync(s, 'utf8'), s)]);
   }
 })(templateDir, gameDir);

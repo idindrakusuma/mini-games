@@ -70,6 +70,15 @@
       ]
     },
     {
+      "source": "/:path*/assets/fonts/:file*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
       "source": "/:path*/assets/vendor/:file*",
       "headers": [
         {
