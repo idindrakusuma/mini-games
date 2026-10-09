@@ -16,7 +16,7 @@ Setiap game harus:
 - **Web based.** Langsung main di browser, tanpa install, tanpa login, tanpa iklan.
 - **Ceria.** Warna cerah, sudut membulat, font ramah (Baloo 2), animasi dan suara yang menyenangkan. Tidak ada yang menakutkan, kalah yang menyakitkan, atau hitung mundur yang menekan.
 - **Bahasa Indonesia** yang sederhana dan hangat untuk semua teks.
-- **Aman untuk anak.** Tidak ada tautan keluar di area main (tautan untuk orang tua cukup di footer), tidak ada pengumpulan data. Kamera dan mikrofon hanya dipakai bila memang inti permainan, diproses di perangkat, dan ada jalan main tanpa izin tersebut.
+- **Aman untuk anak.** Tidak ada tautan keluar di area main (tautan untuk orang tua cukup di footer), tidak ada pengumpulan data pribadi. Satu-satunya pengukuran adalah Vercel Web Analytics (jumlah kunjungan per halaman, anonim, tanpa cookie) yang disisipkan otomatis oleh `scripts/build.mjs` saat build di Vercel. Jangan tulis script analytics di HTML, jangan tambah custom event dari dalam game, dan jangan pasang tracker lain. Kamera dan mikrofon hanya dipakai bila memang inti permainan, diproses di perangkat, dan ada jalan main tanpa izin tersebut.
 - Mendukung **mode gelap** (`prefers-color-scheme`) dan `prefers-reduced-motion`.
 
 ## Struktur & aturan teknis
@@ -36,6 +36,7 @@ vercel.json
 - **`localStorage`**: semua game berbagi satu domain, jadi key wajib diberi prefix nama game, misalnya `pemburuKuman.stars`.
 - **PWA per game**: tiap game punya `site.webmanifest` sendiri dengan `start_url` dan `scope` `"./"`, dan ikon dengan path relatif.
 - **SEO**: URL canonical, `og:url`, dan `og:image` memakai URL lengkap `https://mini-games.indrakusuma.dev/<nama-game>/...`. `robots.txt` dan `sitemap.xml` hanya ada satu, di `games/landing-page/public/`.
+- **Analytics**: script `/_vercel/insights/script.js` hanya ada di `dist/` hasil build di Vercel (`VERCEL=1`); build lokal tidak menyisipkannya. Untuk mengecek hasilnya di lokal: `ANALYTICS=1 npm run build`.
 - **Cache**: `scripts/build.mjs` otomatis menambahkan `?v=<hash isi file>` ke setiap `<link href="….css">` dan `<script src="….js">` lokal di HTML hasil build, jadi jangan tulis `?v=` sendiri untuk CSS/JS. URL ber-`?v=` di-cache 1 tahun (`immutable`), dan CSS/JS tanpa `?v=` (misalnya yang dimuat dari JS) divalidasi ulang ke server (`max-age=0`). Gambar dan ikon di `assets/images|icons/` di-cache 1 hari. Kalau mengganti gambar dengan nama file yang sama, tambahkan `?v=N` di referensinya. File di `assets/vendor/` (library pihak ketiga, misalnya model MediaPipe) di-cache 1 tahun, jadi versinya wajib ada di nama file atau folder.
 - Nama folder game memakai **kebab-case** dan langsung menjadi path URL-nya.
 

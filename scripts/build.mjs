@@ -2,6 +2,7 @@
 //   games/landing-page/public  → dist/
 //   games/<nama-game>/public   → dist/<nama-game>/
 // Pakai: node scripts/build.mjs   (tanpa dependency)
+// Di Vercel (VERCEL=1), HTML hasil build juga diberi script Vercel Web Analytics (lihat ANALYTICS di bawah).
 //
 // Cache busting: di HTML hasil salinan, setiap <link href="….css"> dan <script src="….js"> lokal diberi
 // ?v=<hash isi file>. Jadi URL berubah setiap kali isinya berubah, dan browser (termasuk Safari yang
@@ -42,6 +43,14 @@ for (const name of games) {
   console.log(`games/${name}/public → ${path.relative(root, dest) || 'dist'}/`);
 }
 
+// Vercel Web Analytics (anonim, tanpa cookie): hanya disisipkan saat build di Vercel (env VERCEL=1),
+// karena /_vercel/insights/* hanya ada di sana. File sumber dan build lokal tetap bebas analytics,
+// jadi game yang dibuka lokal atau dicopy keluar tidak membuat request 404. Paksa dengan ANALYTICS=1.
+const ANALYTICS = process.env.VERCEL === '1' || process.env.ANALYTICS === '1';
+const ANALYTICS_TAGS = `<script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+<script defer src="/_vercel/insights/script.js"></script>
+`;
+
 // Tambahkan ?v=<hash> ke referensi CSS/JS lokal di semua HTML di dist/.
 const ASSET_REF = /(<(?:link|script)\b[^>]*?\s(?:href|src)=")([^"]+?\.(?:css|js))(?:\?[^"]*)?(")/g;
 const hashOf = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex').slice(0, 10);
@@ -55,6 +64,7 @@ for (const html of fs.readdirSync(dist, { recursive: true }).filter(f => f.endsW
     versioned++;
     return `${pre}${ref}?v=${hashOf(target)}${post}`;
   });
-  fs.writeFileSync(file, out);
+  if (ANALYTICS && !out.includes('</head>')) throw new Error(`${path.relative(root, file)}: tidak ada </head>`);
+  fs.writeFileSync(file, ANALYTICS ? out.replace('</head>', ANALYTICS_TAGS + '</head>') : out);
 }
-console.log(`${versioned} referensi CSS/JS diberi ?v=<hash>`);
+console.log(`${versioned} referensi CSS/JS diberi ?v=<hash>${ANALYTICS ? ', Vercel Web Analytics disisipkan' : ''}`);
