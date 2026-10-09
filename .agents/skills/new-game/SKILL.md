@@ -81,6 +81,6 @@ Pakai Playwright dengan viewport HP (misalnya `devices['iPhone 13']`), mode tera
 
 ## 6. Selesaikan
 
-- CSS/JS selalu divalidasi ulang ke server, jadi tidak perlu `?v=N`. Gambar/ikon di-cache 1 hari: kalau mengganti gambar dengan nama file yang sama (misalnya membuat ulang `icon-192.png` yang tampil di landing page), tambahkan `?v=N` di referensinya.
+- CSS/JS yang dimuat lewat `<link>`/`<script>` di HTML otomatis diberi `?v=<hash>` oleh `npm run build`, jadi tidak perlu `?v=N` manual. Gambar/ikon di-cache 1 hari: kalau mengganti gambar dengan nama file yang sama (misalnya membuat ulang `icon-192.png` yang tampil di landing page), tambahkan `?v=N` di referensinya.
 - Commit dengan pesan yang jelas, lalu push ke branch yang diminta user.
 - Laporkan ke user: URL game (`https://mini-games.indrakusuma.dev/<slug>/`), screenshot, dan apa saja yang belum dites (misalnya Safari asli atau perangkat fisik).
