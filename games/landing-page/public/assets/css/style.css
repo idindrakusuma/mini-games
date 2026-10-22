@@ -66,9 +66,10 @@ main{
 .shelf{ position:relative; margin:0 -16px; }
 .games{
   --w:min(54vw, 250px);
-  position:relative; list-style:none; margin:0; display:flex; gap:6px; overflow-x:auto; overscroll-behavior-x:contain;
+  position:relative; list-style:none; margin:-14px 0 -34px; display:flex; gap:6px; overflow-x:auto; overscroll-behavior-x:contain;
   scroll-snap-type:x mandatory; scrollbar-width:none; -webkit-overflow-scrolling:touch;
-  padding:16px calc(50% - var(--w) / 2) 24px;
+  /* padding atas/bawah longgar supaya cahaya kartu terpilih tidak terpotong area geser; margin negatif mengembalikan jaraknya */
+  padding:30px calc(50% - var(--w) / 2) 58px;
 }
 .games::-webkit-scrollbar{ display:none; }
 .games li{ flex:0 0 var(--w); scroll-snap-align:center; transform-origin:50% 60%; will-change:transform; }
@@ -84,7 +85,7 @@ main{
 .card b{ font-size:clamp(22px, 6.4vw, 28px); line-height:1.1; margin-top:10px; }
 .card small{ font-size:clamp(15px, 4.2vw, 18px); line-height:1.25; color:var(--muted); }
 /* Kartu yang sedang dipilih: bersinar dan ikonnya bergoyang */
-.games li.on .card{ box-shadow:0 10px 0 var(--shadow), 0 0 0 6px rgba(255,255,255,.75), 0 16px 40px var(--accent); }
+.games li.on .card{ box-shadow:0 10px 0 var(--shadow), 0 0 0 6px rgba(255,255,255,.75), 0 12px 32px var(--accent); }
 .games li.on .card img, .games li.on .card .ico{ animation:bob 2.6s ease-in-out infinite; }
 a.card:active{ transform:translateY(5px); box-shadow:0 3px 0 var(--shadow); }
 .card.soap{ --accent:var(--soap); }
@@ -115,7 +116,7 @@ body{ transition:background-color .45s ease; }
 /* Di HP layar sempit kartu samping sudah terlihat; panah cukup untuk layar lebar */
 @media (max-width:599px){ .nav{ display:none; } }
 
-.dots{ display:flex; justify-content:center; gap:8px; margin-top:2px; min-height:12px; }
+.dots{ display:flex; justify-content:center; gap:8px; margin-top:8px; min-height:12px; }
 .dots i{ width:12px; height:12px; border-radius:6px; background:var(--muted); opacity:.35; transition:width .25s, opacity .25s; }
 .dots i.on{ width:30px; opacity:1; background:var(--text); }
 
