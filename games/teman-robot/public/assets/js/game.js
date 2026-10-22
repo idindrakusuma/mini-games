@@ -18,23 +18,38 @@ showStars();
 
 /* ---------- Efek suara (Web Audio, tanpa file) ---------- */
 let ac = null;
-function audio(){ if(!ac){ try{ ac = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(ac && ac.state==='suspended') ac.resume(); return ac; }
+let out = null;   // jalur keluar bersama: dikeraskan lalu dibatasi kompresor supaya lantang tanpa pecah
+function audio(){
+  if(!ac){
+    try{
+      ac = new (window.AudioContext||window.webkitAudioContext)();
+      const boost = ac.createGain(), comp = ac.createDynamicsCompressor();
+      boost.gain.value = 1.8;
+      comp.threshold.value = -14; comp.knee.value = 6; comp.ratio.value = 12; comp.attack.value = .003; comp.release.value = .2;
+      boost.connect(comp).connect(ac.destination); out = boost;
+    }catch(e){ ac = null; }
+  }
+  if(ac && ac.state==='suspended') ac.resume();
+  return ac;
+}
+// iOS memindahkan suara ke speaker telepon (pelan) selama mikrofon aktif; kembalikan ke speaker utama.
+function audioSession(type){ try { if (navigator.audioSession) navigator.audioSession.type = type; } catch(e) {} }
 function tone(f1,f2,dur,type='sine',vol=.2,delay=0){
   const a = audio(); if(!a) return;
   const t = a.currentTime + delay, o = a.createOscillator(), g = a.createGain();
   o.type = type; o.frequency.setValueAtTime(f1,t); o.frequency.exponentialRampToValueAtTime(f2,t+dur);
   g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.001,t+dur);
-  o.connect(g).connect(a.destination); o.start(t); o.stop(t+dur+.02);
+  o.connect(g).connect(out); o.start(t); o.stop(t+dur+.02);
 }
-const sBeep  = () => { tone(880,880,.07,'square',.06); tone(1320,1320,.07,'square',.06,.09); };
-const sBoing = () => { tone(220,880,.18,'square',.08); tone(880,440,.25,'triangle',.12,.16); };
-const sLaugh = () => [0,1,2,3,4].forEach(i => tone(700 + i*60, 500 + i*60, .09, 'triangle', .14, i*.11));
-const sRight = () => { tone(660,990,.12,'triangle',.16); tone(990,1320,.16,'triangle',.12,.1); };
-const sWrong = () => tone(330,260,.18,'sine',.1);
-const sWin   = () => [523,659,784,1047].forEach((f,i)=>tone(f,f*1.01,.25,'triangle',.18,i*.12));
+const sBeep  = () => { tone(880,880,.07,'square',.1); tone(1320,1320,.07,'square',.1,.09); };
+const sBoing = () => { tone(220,880,.18,'square',.14); tone(880,440,.25,'triangle',.22,.16); };
+const sLaugh = () => [0,1,2,3,4].forEach(i => tone(700 + i*60, 500 + i*60, .09, 'triangle', .24, i*.11));
+const sRight = () => { tone(660,990,.12,'triangle',.26); tone(990,1320,.16,'triangle',.2,.1); };
+const sWrong = () => tone(330,260,.18,'sine',.2);
+const sWin   = () => [523,659,784,1047].forEach((f,i)=>tone(f,f*1.01,.25,'triangle',.28,i*.12));
 function sDance(){
   const notes = [523,659,784,659, 587,698,880,698, 523,659,784,1047];
-  notes.forEach((f,i) => { tone(f,f,.16,'square',.07,i*.2); if(i % 2 === 0) tone(131,131,.12,'triangle',.18,i*.2); });
+  notes.forEach((f,i) => { tone(f,f,.16,'square',.12,i*.2); if(i % 2 === 0) tone(131,131,.12,'triangle',.3,i*.2); });
 }
 
 /* ---------- Robot bicara (speechSynthesis, suara tinggi seperti robot) ---------- */
@@ -59,7 +74,7 @@ function say(text, after = 'senang'){
   if (!('speechSynthesis' in window)) return;
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'id-ID'; if (voice) u.voice = voice;
-  u.rate = .95; u.pitch = 1.7;
+  u.rate = .95; u.pitch = 1.7; u.volume = 1;
   u.onend = () => { clearTimeout(talkTimer); talkTimer = setTimeout(done, 150); };
   // Beberapa browser membuang ucapan yang dipanggil tepat setelah cancel(): beri jeda singkat.
   if (busy) speakTimer = setTimeout(() => { speakTimer = 0; speechSynthesis.speak(u); }, 60); else speechSynthesis.speak(u);
@@ -130,9 +145,11 @@ async function startListening(){
   }
   hush(); clearTimeout(moodTimer);
   let stream;
+  audioSession('play-and-record');
   try {
     stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
   } catch(e) {
+    audioSession('playback');
     bubble('Mikrofonnya belum boleh dipakai. Tidak apa-apa, colek aku atau main tebak, yuk!');
     say('Mikrofonnya belum boleh dipakai. Tidak apa-apa, colek aku atau main tebak, yuk!');
     return;
@@ -170,6 +187,7 @@ function stopMic(){
   r.proc.onaudioprocess = null;
   try { r.src.disconnect(); r.proc.disconnect(); r.mute.disconnect(); } catch(e) {}
   r.stream.getTracks().forEach(t => t.stop());
+  audioSession('playback');
   bars.forEach(b => { b.style.height = ''; });
   return r;
 }
@@ -183,16 +201,18 @@ function finishListening(){
   if (r.startAt < 0 || len / r.rate < .3) {
     const line = 'Hmm, aku belum dengar suaramu. Coba lagi, ya!'; bubble(line); say(line); return;
   }
-  const a = audio(), buf = a.createBuffer(1, len, r.rate), out = buf.getChannelData(0);
+  const a = audio(), buf = a.createBuffer(1, len, r.rate), data = buf.getChannelData(0);
   let pos = 0, skip = from;
   for (const c of r.chunks) {
     if (skip >= c.length) { skip -= c.length; continue; }
     const part = c.subarray(skip); skip = 0;
-    out.set(part, pos); pos += part.length;
+    data.set(part, pos); pos += part.length;
   }
-  // Normalkan volume supaya suara pelan tetap terdengar jelas.
-  let peak = 0; for (let i = 0; i < out.length; i++) peak = Math.max(peak, Math.abs(out[i]));
-  const gainVal = peak > 0 ? Math.min(6, .9 / peak) : 1;
+  // Normalkan ke kekerasan rata-rata (RMS), bukan puncak, supaya suara pelan tetap lantang.
+  // Puncak yang kelewat keras diredam kompresor di jalur keluar.
+  let sum = 0; for (let i = 0; i < data.length; i++) sum += data[i] * data[i];
+  const rms = Math.sqrt(sum / data.length);
+  const gainVal = rms > 0 ? Math.min(12, .3 / rms) : 1;
   playRobotVoice(buf, gainVal);
 }
 function playRobotVoice(buf, gainVal){
@@ -202,9 +222,9 @@ function playRobotVoice(buf, gainVal){
   // Efek robot: ring modulator (sinyal dikali osilator 55Hz) dicampur sedikit suara asli.
   const ring = a.createGain(); ring.gain.value = 0;
   const osc = a.createOscillator(); osc.frequency.value = 55; osc.connect(ring.gain);
-  const wet = a.createGain(); wet.gain.value = .8;
-  const dry = a.createGain(); dry.gain.value = .45;
-  src.connect(pre); pre.connect(ring); ring.connect(wet); wet.connect(a.destination); pre.connect(dry); dry.connect(a.destination);
+  const wet = a.createGain(); wet.gain.value = 1.4;
+  const dry = a.createGain(); dry.gain.value = .7;
+  src.connect(pre); pre.connect(ring); ring.connect(wet); wet.connect(out); pre.connect(dry); dry.connect(out);
   const dur = buf.duration / 1.45;
   sBeep();
   src.start(t + .18); osc.start(t + .18); src.stop(t + .18 + dur + .05); osc.stop(t + .18 + dur + .1);
