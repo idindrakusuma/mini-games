@@ -1,9 +1,7 @@
 // Membuat thumbnail (og-image.png 1200x630) dan ikon game teman-robot.
 // Pakai: npm run teman-robot:images   (butuh Playwright + Chromium; set CHROMIUM_PATH bila perlu)
 //
-// Gambar karakter ada di ART di bawah. Default-nya emoji 🤖 di lingkaran warna.
-// Kalau game punya karakter sendiri yang digambar di canvas (seperti germ.js di
-// Pemburu Kuman), muat file itu lewat EXTRA_JS lalu panggil fungsinya di ART.
+// Robot Bumble Bee digambar dengan robot.js (lewat EXTRA_JS), sama dengan di dalam game.
 import { chromium } from 'playwright';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -11,17 +9,22 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const out = p => path.join(root, 'public/assets', p);
-const EXTRA_JS = [/* 'public/assets/js/karakter.js' */].map(f => fs.readFileSync(path.join(root, f), 'utf8')).join('\n');
+const EXTRA_JS = ['public/assets/js/robot.js'].map(f => fs.readFileSync(path.join(root, f), 'utf8')).join('\n');
 const fontLink = '<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">';
 
-// ART(c, x, y, r): gambar karakter utama berpusat di (x, y) dengan "jari-jari" r.
+// ART(c, x, y, r, full): gambar robot berpusat di (x, y) dengan "jari-jari" r (full: dengan lingkaran biru
+// di belakangnya). Robot berupa SVG dari robot.js, jadi ART mengembalikan Promise sampai gambarnya selesai.
 // ART baru dipanggil setelah font Baloo 2 termuat, jadi teks di canvas boleh memakai
 // c.font = '800 100px "Baloo 2"' tanpa jatuh ke font cadangan.
-const ART = `function ART(c,x,y,r){
-  c.fillStyle='#47C9E5'; c.beginPath(); c.arc(x,y,r,0,7); c.fill();
-  c.fillStyle='rgba(255,255,255,.35)'; c.beginPath(); c.arc(x-r*.35,y-r*.4,r*.22,0,7); c.fill();
-  c.font=(r*1.15)+'px "Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif';
-  c.fillStyle='#000'; c.textAlign='center'; c.textBaseline='middle'; c.fillText("🤖",x,y+r*.08);
+const ART = `function ART(c,x,y,r,full){
+  return new Promise(res=>{
+    const img=new Image();
+    img.onload=()=>{
+      if(full){ c.fillStyle='#47C9E5'; c.beginPath(); c.arc(x,y,r*1.25,0,7); c.fill(); }
+      const h=r*2.4, w=h*232/240; c.drawImage(img,x-w/2,y-h/2+r*.05,w,h); res();
+    };
+    img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(robotSVG('senang'));
+  });
 }`;
 
 const og = `<!doctype html><html><head>${fontLink}<style>
@@ -39,7 +42,7 @@ canvas{position:absolute;right:40px;top:35px}
 <div class="url">mini-games.indrakusuma.dev/teman-robot</div>
 <canvas id="c" width="520" height="560"></canvas>
 <script>${EXTRA_JS}</script><script>${ART}
-document.fonts.load('800 100px "Baloo 2"').then(()=>{ART(document.getElementById('c').getContext('2d'),260,280,200);window.done=1;});
+document.fonts.load('800 100px "Baloo 2"').then(()=>{ART(document.getElementById('c').getContext('2d'),260,280,200,1).then(()=>window.done=1);});
 </script></body></html>`;
 
 // full: kotak penuh (ikon app); false: sudut membulat (favicon)
@@ -47,7 +50,7 @@ const icon = (S, full) => `<!doctype html><html><head>${fontLink}<style>html,bod
 <canvas id="c" width="${S}" height="${S}"></canvas><script>${EXTRA_JS}</script><script>${ART}
 const c=document.getElementById('c').getContext('2d'), S=${S};
 c.fillStyle='#BFEFFA'; ${full ? 'c.fillRect(0,0,S,S);' : 'c.beginPath();c.roundRect(0,0,S,S,S*.22);c.fill();'}
-document.fonts.load('800 100px "Baloo 2"').then(()=>{ART(c,S/2,S/2,S*${full ? .3 : .4});window.done=1;});
+document.fonts.load('800 100px "Baloo 2"').then(()=>{ART(c,S/2,S/2,S*${full ? .3 : .36},${full ? 1 : 0}).then(()=>window.done=1);});
 </script></body></html>`;
 
 const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});

@@ -16,7 +16,10 @@ Game robot bicara untuk anak: colek, ajak ngobrol, dan main tebak huruf &amp; an
 
 ## Cara Main
 
-<!-- TODO: jelaskan cara main dalam 2–4 langkah sederhana. -->
+1. Tekan **Main!** lalu sapa Bumble Bee, robot kuning yang ramah.
+2. **Colek** kepalanya (bunyi *bip bop!*) atau perutnya (dia kegelian). Tekan **Joget** untuk menari bersama.
+3. Tekan **Ngobrol**, lalu bicara: Bumble Bee mengulang ucapanmu dengan suara robot. Suara hanya diproses di HP dan tidak dikirim ke mana pun. Tanpa izin mikrofon, semua bagian lain tetap bisa dimainkan.
+4. Tekan **Tebak**: Bumble Bee bertanya "Mana huruf B?", "Mana angka 7?", atau "Ada berapa?". Pilih kartu yang benar. Jawab 5 soal untuk mendapat 1 bintang. Salah tidak apa-apa, coba lagi saja.
 
 ## Pengembangan
 

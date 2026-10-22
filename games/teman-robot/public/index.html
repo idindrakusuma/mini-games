@@ -60,7 +60,7 @@
 <body>
 
 <main id="home">
-  <div class="mascot" aria-hidden="true">🤖</div>
+  <div class="mascot" id="homeRobot" aria-hidden="true"></div>
   <h1>Teman Robot</h1>
   <p class="lead">Colek robotnya, ajak ngobrol &amp; main tebak!</p>
   <button class="btn big" id="startBtn">Main! ▶</button>
@@ -69,26 +69,56 @@
   <p class="credit">Dibuat oleh <a href="https://indrakusuma.dev" rel="author">Indra Kusuma</a></p>
 </main>
 
-<section id="play" aria-label="Main" tabindex="-1">
-  <canvas id="stage"></canvas>
+<section id="play" class="free" aria-label="Main" tabindex="-1">
   <div class="hud">
-    <button class="round" id="homeBtn" aria-label="Kembali ke awal">🏠</button>
+    <button class="round" id="homeBtn" aria-label="Kembali">🏠</button>
     <div class="counter" id="counter"></div>
     <span class="round spacer" aria-hidden="true"></span>
   </div>
-  <div class="tip" id="tip"></div>
+
+  <div class="talk">
+    <div class="bubble" id="bubble" aria-live="polite">
+      <div id="bubbleText"></div>
+      <div class="pic" id="bubblePic" hidden></div>
+      <button class="again" id="replayBtn" hidden>🔊 Dengar lagi</button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="robot-wrap" id="robotWrap">
+      <div id="robot"></div>
+      <button class="hit head" id="hitHead" aria-label="Colek kepala robot"></button>
+      <button class="hit belly" id="hitBelly" aria-label="Colek perut robot"></button>
+    </div>
+  </div>
+
+  <div class="bar actions">
+    <button class="act mic" id="talkBtn"><span class="ico">🎤</span>Ngobrol</button>
+    <button class="act quiz" id="quizBtn"><span class="ico">❓</span>Tebak</button>
+    <button class="act dance" id="danceBtn"><span class="ico">🎵</span>Joget</button>
+  </div>
+
+  <div class="bar listen">
+    <div class="level" id="level" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <button class="micbig" id="micBtn" aria-label="Selesai bicara">🎤</button>
+    <div class="hint">Ketuk lagi kalau sudah</div>
+  </div>
+
+  <div class="bar cards" id="cards"></div>
 
   <div class="sheet" id="winSheet">
     <div class="panel">
-      <div class="big">🌟</div>
+      <div class="win-robot" id="winRobot" aria-hidden="true"></div>
+      <div class="big" aria-hidden="true">⭐⭐⭐⭐⭐</div>
       <h2>Hore, hebat!</h2>
-      <p>Kamu dapat 1 bintang!</p>
-      <button class="btn" id="againBtn">Main lagi</button>
-      <button class="btn alt" id="doneBtn">Selesai</button>
+      <p>Kamu jawab 5 soal. Kamu dapat 1 bintang!</p>
+      <button class="btn" id="againBtn">Main tebak lagi</button>
+      <button class="btn alt" id="doneBtn">Main sama robot</button>
     </div>
   </div>
 </section>
 
+<script defer src="assets/js/robot.js"></script>
 <script defer src="assets/js/game.js"></script>
 </body>
 </html>
