@@ -1,0 +1,16 @@
+{
+  "name": "Teman Robot",
+  "short_name": "Teman Robot",
+  "description": "Game robot bicara untuk anak: colek, ajak ngobrol, dan main tebak huruf & angka. Gratis, langsung main di browser tanpa install.",
+  "lang": "id",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#BFEFFA",
+  "theme_color": "#BFEFFA",
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
