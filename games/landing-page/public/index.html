@@ -43,6 +43,7 @@
 </script>
 <link rel="preload" href="assets/fonts/baloo2-latin-v23.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/css/style.css">
+<script defer src="assets/js/shelf.js"></script>
 </head>
 <body>
 
@@ -79,7 +80,8 @@
     <p class="lead">Mau main apa hari ini? Pilih satu, yuk!</p>
   </header>
 
-  <ul class="games">
+  <div class="shelf">
+  <ul class="games" id="games">
     <!-- Satu kartu per game. Game baru: salin kartu ini dan ganti isinya. -->
     <li>
       <a class="card soap" href="pemburu-kuman/">
@@ -109,7 +111,19 @@
         <small>Yuk, pasangkan bentuk &amp; warna!</small>
       </a>
     </li>
+    <li>
+      <a class="card water" href="teman-robot/">
+        <img src="teman-robot/assets/icons/icon-192.png" alt="" width="96" height="96">
+        <b>Teman Robot</b>
+        <small>Colek robotnya, ajak ngobrol &amp; main tebak!</small>
+      </a>
+    </li>
   </ul>
+  <button class="nav prev" id="prevBtn" aria-label="Game sebelumnya" hidden>◀</button>
+  <button class="nav next" id="nextBtn" aria-label="Game berikutnya" hidden>▶</button>
+  </div>
+  <div class="dots" id="dots" aria-hidden="true"></div>
+  <a class="play" id="playBtn" href="#" hidden>Main! ▶</a>
 
   <p class="note">Untuk ayah dan bunda: semua game gratis, tanpa iklan, dan berjalan langsung di browser.</p>
   <p class="credit">Dibuat oleh <a href="https://indrakusuma.dev" rel="author">Indra Kusuma</a></p>

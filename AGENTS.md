@@ -56,6 +56,7 @@ npm run landing-page:images
 npm run huruf-angka:images
 npm run pensil-ajaib:images
 npm run cocok-bentuk:images
+npm run teman-robot:images
 npm run pemburu-kuman:vendor   # unduh ulang MediaPipe Face Landmarker untuk mode gigi
 npm run promo                  # rekam gameplay asli & render video promo Threads ke promo/threads/ (butuh Playwright + ffmpeg)
 ```

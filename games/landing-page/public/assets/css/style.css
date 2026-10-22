@@ -41,7 +41,7 @@ a:focus-visible{ outline:4px solid var(--sun); outline-offset:4px; }
 @keyframes drift{ to{ transform:translateX(calc(100vw + 160px)); } }
 
 /* ---------- Matahari ---------- */
-.hero-sun{ display:block; width:clamp(120px, 34vw, 160px); height:auto; margin:0 auto; overflow:visible; }
+.hero-sun{ display:block; width:clamp(80px, 22vw, 130px); height:auto; margin:0 auto; overflow:visible; }
 .hero-sun .rays{ transform-origin:0 0; animation:spin 24s linear infinite; }
 .hero-sun .eyes{ transform-origin:0 -15px; animation:blink 5s infinite; }
 @keyframes spin{ to{ transform:rotate(360deg); } }
@@ -54,32 +54,40 @@ main{
   text-align:center;
 }
 .hero h1{
-  font-size:clamp(44px, 12vw, 76px); line-height:1; margin:10px 0 8px; font-weight:800;
+  font-size:clamp(40px, 11vw, 72px); line-height:1; margin:6px 0 6px; font-weight:800;
   text-shadow:0 5px 0 rgba(255,255,255,.65);
 }
 @media (prefers-color-scheme: dark){ :root .hero h1{ text-shadow:0 5px 0 rgba(0,0,0,.25); } }
-.lead{ font-size:clamp(20px, 5vw, 26px); color:var(--muted); margin:0 0 24px; font-weight:500; }
+.lead{ font-size:clamp(20px, 5vw, 26px); color:var(--muted); margin:0 0 4px; font-weight:500; }
 
-/* Kartu ringkas: 2 kolom di HP (juga di layar 320px), lebih banyak kolom di layar lebar. */
+/* ---------- Rak game: geser ke samping, kartu di tengah membesar (seperti menu pilih game di konsol) ----------
+   Tanpa JS: tetap satu baris kartu yang bisa digeser. shelf.js menambah efek membesar, warna latar,
+   tombol panah, titik posisi, dan tombol Main. */
+.shelf{ position:relative; margin:0 -16px; }
 .games{
-  list-style:none; margin:0; padding:0; display:grid; gap:14px;
-  grid-template-columns:repeat(auto-fill, minmax(136px, 1fr));
+  --w:min(54vw, 250px);
+  position:relative; list-style:none; margin:-14px 0 -34px; display:flex; gap:6px; overflow-x:auto; overscroll-behavior-x:contain;
+  scroll-snap-type:x mandatory; scrollbar-width:none; -webkit-overflow-scrolling:touch;
+  /* padding atas/bawah longgar supaya cahaya kartu terpilih tidak terpotong area geser; margin negatif mengembalikan jaraknya */
+  padding:30px calc(50% - var(--w) / 2) 58px;
 }
-@media (min-width:600px){ .games{ gap:18px; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); } }
+.games::-webkit-scrollbar{ display:none; }
+.games li{ flex:0 0 var(--w); scroll-snap-align:center; transform-origin:50% 60%; will-change:transform; }
 .card{
   position:relative; height:100%; display:flex; flex-direction:column; align-items:center; gap:4px;
-  padding:16px 10px 16px; border-radius:26px; background:var(--card); text-decoration:none;
-  border:4px solid var(--accent, var(--water)); box-shadow:0 8px 0 var(--shadow);
-  transition:transform .15s ease, box-shadow .15s ease;
+  padding:16px 12px 14px; border-radius:30px; background:var(--card); text-decoration:none;
+  border:5px solid var(--accent, var(--water)); box-shadow:0 8px 0 var(--shadow);
+  transition:box-shadow .25s ease;
 }
-a.card:hover{ transform:translateY(-4px) rotate(-1deg); box-shadow:0 12px 0 var(--shadow); }
-a.card:active{ transform:translateY(5px); box-shadow:0 3px 0 var(--shadow); }
 .card img, .card .ico{
-  width:clamp(72px, 22vw, 96px); height:clamp(72px, 22vw, 96px); border-radius:22px; display:grid; place-items:center; font-size:clamp(44px, 13vw, 58px);
-  animation:bob 2.6s ease-in-out infinite;
+  width:72%; height:auto; aspect-ratio:1; border-radius:28px; display:grid; place-items:center; font-size:clamp(64px, 20vw, 96px);
 }
-.card b{ font-size:clamp(19px, 5.4vw, 26px); line-height:1.1; margin-top:8px; }
-.card small{ font-size:clamp(14px, 3.9vw, 17px); line-height:1.25; color:var(--muted); }
+.card b{ font-size:clamp(22px, 6.4vw, 28px); line-height:1.1; margin-top:10px; }
+.card small{ font-size:clamp(15px, 4.2vw, 18px); line-height:1.25; color:var(--muted); }
+/* Kartu yang sedang dipilih: bersinar dan ikonnya bergoyang */
+.games li.on .card{ box-shadow:0 10px 0 var(--shadow), 0 0 0 6px rgba(255,255,255,.75), 0 12px 32px var(--accent); }
+.games li.on .card img, .games li.on .card .ico{ animation:bob 2.6s ease-in-out infinite; }
+a.card:active{ transform:translateY(5px); box-shadow:0 3px 0 var(--shadow); }
 .card.soap{ --accent:var(--soap); }
 .card.sun{ --accent:var(--sun); }
 .card.leaf{ --accent:var(--leaf); }
@@ -87,7 +95,40 @@ a.card:active{ transform:translateY(5px); box-shadow:0 3px 0 var(--shadow); }
 .card.grape{ --accent:var(--grape); }
 .card.soon{ --accent:var(--soon); border-style:dashed; box-shadow:none; opacity:.85; }
 .card.soon .ico{ background:var(--soon); filter:grayscale(.3); animation:none; }
-@keyframes bob{ 50%{ transform:translateY(-6px) rotate(3deg); } }
+
+/* Latar halaman ikut warna game yang dipilih (diatur shelf.js lewat --focus) */
+body{ transition:background-color .45s ease; }
+@supports (background:color-mix(in srgb, red 50%, blue)){
+  body.shelf-on{ background:color-mix(in srgb, var(--focus, var(--water)) 34%, #FFFFFF); }
+  @media (prefers-color-scheme: dark){ body.shelf-on{ background:color-mix(in srgb, var(--focus, var(--water)) 24%, var(--bg)); } }
+}
+
+.nav{
+  position:absolute; top:50%; transform:translateY(-50%); z-index:2;
+  width:56px; height:56px; border-radius:50%; border:0; background:var(--card); color:var(--text);
+  font:inherit; font-size:22px; cursor:pointer; box-shadow:0 4px 0 var(--shadow); display:grid; place-items:center;
+}
+.nav.prev{ left:max(8px, env(safe-area-inset-left,0px)); }
+.nav.next{ right:max(8px, env(safe-area-inset-right,0px)); }
+.nav:disabled{ opacity:0; pointer-events:none; }
+.nav:active{ transform:translateY(calc(-50% + 3px)); box-shadow:0 1px 0 var(--shadow); }
+.nav:focus-visible, .play:focus-visible{ outline:4px solid var(--sun); outline-offset:3px; }
+/* Di HP layar sempit kartu samping sudah terlihat; panah cukup untuk layar lebar */
+@media (max-width:599px){ .nav{ display:none; } }
+
+.dots{ display:flex; justify-content:center; gap:8px; margin-top:8px; min-height:12px; }
+.dots i{ width:12px; height:12px; border-radius:6px; background:var(--muted); opacity:.35; transition:width .25s, opacity .25s; }
+.dots i.on{ width:30px; opacity:1; background:var(--text); }
+
+.play{
+  display:inline-flex; align-items:center; justify-content:center; min-width:220px; margin-top:14px; padding:10px 40px;
+  border-radius:999px; background:var(--focus, var(--water)); color:#1B2A6B; text-decoration:none;
+  font-size:30px; font-weight:800; box-shadow:0 6px 0 var(--shadow); transition:background-color .45s ease;
+}
+.play:active{ transform:translateY(5px); box-shadow:0 1px 0 var(--shadow); }
+.play[hidden]{ display:none; }
+
+@keyframes bob{ 50%{ transform:translateY(-8px) rotate(3deg); } }
 
 .note{ margin:30px auto 6px; max-width:520px; font-size:16px; color:var(--muted); }
 .credit{ margin:0; font-size:16px; color:var(--muted); }

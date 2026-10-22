@@ -19,7 +19,7 @@
       ]
     },
     {
-      "source": "/((?!pemburu-kuman/).*)",
+      "source": "/((?!pemburu-kuman/|teman-robot/).*)",
       "headers": [
         {
           "key": "Permissions-Policy",
@@ -33,6 +33,15 @@
         {
           "key": "Permissions-Policy",
           "value": "camera=(self), microphone=(), geolocation=()"
+        }
+      ]
+    },
+    {
+      "source": "/teman-robot/(.*)",
+      "headers": [
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(self), geolocation=()"
         }
       ]
     },
