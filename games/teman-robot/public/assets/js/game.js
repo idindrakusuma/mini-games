@@ -219,11 +219,12 @@ function playRobotVoice(buf, gainVal){
   const a = audio(), t = a.currentTime + .05;
   const src = a.createBufferSource(); src.buffer = buf; src.playbackRate.value = 1.45;
   const pre = a.createGain(); pre.gain.value = gainVal;
-  // Efek robot: ring modulator (sinyal dikali osilator 55Hz) dicampur sedikit suara asli.
+  // Seperti Talking Tom: suara asli dipercepat (lebih tinggi) jadi bagian utama, ditambah sedikit
+  // ring modulator (dikali osilator 55Hz) supaya terdengar agak "robot" tanpa menutupi kata-katanya.
   const ring = a.createGain(); ring.gain.value = 0;
   const osc = a.createOscillator(); osc.frequency.value = 55; osc.connect(ring.gain);
-  const wet = a.createGain(); wet.gain.value = 1.4;
-  const dry = a.createGain(); dry.gain.value = .7;
+  const wet = a.createGain(); wet.gain.value = .3;
+  const dry = a.createGain(); dry.gain.value = 1.4;
   src.connect(pre); pre.connect(ring); ring.connect(wet); wet.connect(out); pre.connect(dry); dry.connect(out);
   const dur = buf.duration / 1.45;
   sBeep();
