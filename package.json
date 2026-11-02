@@ -15,7 +15,8 @@
     "huruf-angka:images": "node games/huruf-angka/scripts/generate-images.mjs",
     "pensil-ajaib:images": "node games/pensil-ajaib/scripts/generate-images.mjs",
     "cocok-bentuk:images": "node games/cocok-bentuk/scripts/generate-images.mjs",
-    "teman-robot:images": "node games/teman-robot/scripts/generate-images.mjs"
+    "teman-robot:images": "node games/teman-robot/scripts/generate-images.mjs",
+    "talking-rev:images": "node games/talking-rev/scripts/generate-images.mjs"
   },
   "devDependencies": {
     "playwright": "^1.56.1"
