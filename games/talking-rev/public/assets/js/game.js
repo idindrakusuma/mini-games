@@ -96,6 +96,23 @@ function hush(){
   yap(false);
   if (sayDone) { const d = sayDone; sayDone = null; d(); }
 }
+// Teks di balon boleh memakai bunyi tulisan ("Hmm…", "Purrr…"), tapi mesin suara membacanya
+// huruf per huruf ("h m m"). Ubah dulu ke kata yang bisa diucapkan; bunyi yang sudah ada efek
+// suaranya (dengkur, "ssst") cukup dilewati.
+const SPOKEN = [
+  [/\bhm+\b/gi, 'hem'],
+  [/\bkru+k\b/gi, 'kruk kruk'],
+  [/\bpur+\b…?\s*/gi, ''],
+  [/\bs+t\b…?\s*/gi, ''],
+  [/\ba{3,}\b…?/gi, 'ayo, buka mulut!'],
+  [/\bHP\b/g, 'hape'],
+  [/…/g, ', '],
+];
+function speakable(text){
+  let s = text;
+  for (const [re, to] of SPOKEN) s = s.replace(re, to);
+  return s.replace(/\s*,\s*([.!?])/g, '$1').replace(/,\s*$/, '.').replace(/\s+/g, ' ').trim();
+}
 // Tampilkan teks di balon dan ucapkan. Selesai (resolve) saat ucapan selesai atau dipotong.
 function say(text, { talk = true } = {}){
   const busy = canSpeak && (speechSynthesis.speaking || speechSynthesis.pending);
@@ -107,7 +124,9 @@ function say(text, { talk = true } = {}){
     // Cadangan: kalau tidak ada suara (atau onend tidak terpanggil), tetap lanjut.
     sayTimer = setTimeout(finish, canSpeak ? 1500 + text.length * 85 : 600 + text.length * 55);
     if (!canSpeak) return;
-    const u = new SpeechSynthesisUtterance(text);
+    const spoken = speakable(text);
+    if (!spoken) return;   // hanya bunyi (misalnya "Purrr…"): biarkan efek suara saja
+    const u = new SpeechSynthesisUtterance(spoken);
     u.lang = 'id-ID'; if (voice) u.voice = voice;
     u.rate = 1; u.pitch = 1.6; u.volume = 1;
     u.onend = finish; u.onerror = finish;
