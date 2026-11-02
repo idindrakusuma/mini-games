@@ -115,7 +115,7 @@ function revSVG(mood = 'senang') {
  <ellipse cx="80" cy="168" rx="17" ry="11" ${blush}/><ellipse cx="220" cy="168" rx="17" ry="11" ${blush}/>
  ${brows}<g class="eyes">${eye(108)}${eye(192)}</g>
  <path d="M140 156 Q150 150 160 156 Q156 166 150 167 Q144 166 140 156Z" fill="#FF6B8A"/>
- <g class="mouth">${mouth}</g><g class="mouth-talk">${talk}</g>
+ <g class="mouth">${mouth}</g><g class="mouth-talk" display="none">${talk}</g>
  <g stroke="${line}" stroke-width="3" stroke-linecap="round" opacity=".7"><path d="M100 172 L60 166"/><path d="M100 182 L62 188"/><path d="M200 172 L240 166"/><path d="M200 182 L238 188"/></g>
  ${M.drool ? drop(160, 186, .8) : ''}${M.sweat ? drop(238, 86) + drop(62, 100, .7) : ''}
  ${M.sparkle ? `<g class="sparkle" fill="#FFD23F" stroke="#E0A800" stroke-width="2.5" stroke-linejoin="round">${[[40, 40, 1], [262, 52, 1.2], [270, 250, .8], [28, 230, .9]].map(([x, y, k]) => `<path transform="translate(${x} ${y}) scale(${k})" d="M0 -16 L4 -4 L16 0 L4 4 L0 16 L-4 4 L-16 0 L-4 -4Z"/>`).join('')}</g>` : ''}
