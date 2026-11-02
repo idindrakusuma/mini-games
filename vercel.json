@@ -19,7 +19,7 @@
       ]
     },
     {
-      "source": "/((?!pemburu-kuman/|teman-robot/).*)",
+      "source": "/((?!pemburu-kuman/|teman-robot/|talking-rev/).*)",
       "headers": [
         {
           "key": "Permissions-Policy",
@@ -38,6 +38,15 @@
     },
     {
       "source": "/teman-robot/(.*)",
+      "headers": [
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(self), geolocation=()"
+        }
+      ]
+    },
+    {
+      "source": "/talking-rev/(.*)",
       "headers": [
         {
           "key": "Permissions-Policy",
