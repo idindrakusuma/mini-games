@@ -20,6 +20,7 @@
 | 🔷 [Cocok Bentuk](games/cocok-bentuk) | Yuk, pasangkan bentuk & warna! | [/cocok-bentuk/](https://mini-games.indrakusuma.dev/cocok-bentuk/) |
 | 🤖 [Teman Robot](games/teman-robot) | Colek robotnya, ajak ngobrol & main tebak! | [/teman-robot/](https://mini-games.indrakusuma.dev/teman-robot/) |
 | 🐱 [Talking Rev](games/talking-rev) | Bantu Rev makan, minum, dan minum obat! | [/talking-rev/](https://mini-games.indrakusuma.dev/talking-rev/) |
+| 🦎 [Berburu Cicak](games/berburu-cicak) | Tap cicaknya, usir keluar rumah! | [/berburu-cicak/](https://mini-games.indrakusuma.dev/berburu-cicak/) |
 
 ## Struktur
 

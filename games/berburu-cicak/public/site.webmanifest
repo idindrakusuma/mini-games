@@ -1,0 +1,16 @@
+{
+  "name": "Berburu Cicak",
+  "short_name": "Cicak",
+  "description": "Game tap cicak lucu untuk anak: latih ketangkasan jari dan fokus. Gratis, langsung main di browser tanpa install.",
+  "lang": "id",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#DDF6E3",
+  "theme_color": "#DDF6E3",
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
