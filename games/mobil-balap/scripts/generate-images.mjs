@@ -1,0 +1,73 @@
+// Membuat thumbnail (og-image.png 1200x630) dan ikon game mobil-balap.
+// Pakai: npm run mobil-balap:images   (butuh Playwright + Chromium; set CHROMIUM_PATH bila perlu)
+//
+// Mobil digambar dengan drawCar() dari public/assets/js/car.js, sama persis dengan isi game.
+import { chromium } from 'playwright';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const out = p => path.join(root, 'public/assets', p);
+const EXTRA_JS = ['public/assets/js/car.js'].map(f => fs.readFileSync(path.join(root, f), 'utf8')).join('\n');
+const fontLink = '<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">';
+
+// ART(c, x, y, r): gambar karakter utama berpusat di (x, y) dengan "jari-jari" r.
+// ART baru dipanggil setelah font Baloo 2 termuat, jadi teks di canvas boleh memakai
+// c.font = '800 100px "Baloo 2"' tanpa jatuh ke font cadangan.
+const ART = `function ART(c,x,y,r,icon){
+  const sh=(d,col,cx,cy,sz)=>{const p=new Path2D(d);c.save();c.translate(cx-sz/2,cy-sz/2);c.scale(sz/100,sz/100);c.fillStyle=col[0];c.strokeStyle=col[1];c.lineWidth=6;c.lineJoin='round';c.fill(p);c.stroke(p);c.restore();};
+  if(icon){ // ikon: jalan + mobil merah ngebut
+    c.fillStyle='#5C6378'; c.fillRect(x-r*2,y+r*.42,r*4,r*.62);
+    c.fillStyle='#FFFDF7'; for(let k=-2;k<2;k++){ c.beginPath(); c.roundRect(x+k*r*.62,y+r*.7,r*.36,r*.07,4); c.fill(); }
+    drawCar(c,x+r*.06,y+r*.66,r/118,CAR_COLORS.merah,.9,{mood:'ngebut'}); return; }
+  c.fillStyle='#5C6378'; c.beginPath(); c.roundRect(x-r*1.5,y+r*.45,r*3.2,r*.55,r*.12); c.fill();
+  c.fillStyle='#FFFDF7'; for(let k=-3;k<3;k++){ c.beginPath(); c.roundRect(x+r*.06+k*r*.5,y+r*.69,r*.3,r*.06,4); c.fill(); }
+  drawCar(c,x,y+r*.66,r/112,CAR_COLORS.merah,.9,{mood:'ngebut'});
+  sh('M50 10 A40 40 0 1 1 49.99 10Z',['#3FA9F5','#1F6FB8'],x-r*.62,y-r*.85,r*.38);
+  sh('M50 10 Q54 10 57 15 L91 77 Q94 86 84 86 H16 Q6 86 9 77 L43 15 Q46 10 50 10Z',['#FFC93C','#C28A12'],x+r*.02,y-r*1.02,r*.4);
+  sh('M50 88 C20 68 6 50 10 32 C14 14 38 10 50 28 C62 10 86 14 90 32 C94 50 80 68 50 88Z',['#5CCB6E','#2E8A3E'],x+r*.66,y-r*.85,r*.38);
+}`;
+
+const og = `<!doctype html><html><head>${fontLink}<style>
+html,body{margin:0}
+body{width:1200px;height:630px;overflow:hidden;font-family:"Baloo 2",sans-serif;color:#1B2A6B;position:relative;
+background:radial-gradient(circle at 8% 20%, rgba(255,255,255,.6) 0 26px, transparent 27px),
+radial-gradient(circle at 46% 88%, rgba(255,255,255,.45) 0 40px, transparent 41px),
+radial-gradient(circle at 56% 12%, rgba(255,255,255,.5) 0 18px, transparent 19px),#BFEFFA}
+.txt{position:absolute;left:72px;top:0;bottom:120px;width:600px;display:flex;flex-direction:column;justify-content:center}
+h1{font-size:112px;line-height:.92;margin:0 0 22px;font-weight:800;text-shadow:0 6px 0 rgba(255,255,255,.7)}
+p{font-size:36px;line-height:1.25;margin:0;color:#3F5A92;font-weight:500}
+.url{position:absolute;left:72px;bottom:44px;font-size:26px;font-weight:700;color:#3F5A92}
+canvas{position:absolute;right:40px;top:35px}
+</style></head><body><div class="txt"><h1>Mobil<br>Balap</h1><p>Tebak bentuknya, ayo ngebut!</p></div>
+<div class="url">mini-games.indrakusuma.dev/mobil-balap</div>
+<canvas id="c" width="520" height="560"></canvas>
+<script>${EXTRA_JS}</script><script>${ART}
+document.fonts.load('800 100px "Baloo 2"').then(()=>{ART(document.getElementById('c').getContext('2d'),260,280,200);window.done=1;});
+</script></body></html>`;
+
+// full: kotak penuh (ikon app); false: sudut membulat (favicon)
+const icon = (S, full) => `<!doctype html><html><head>${fontLink}<style>html,body{margin:0;background:transparent}</style></head><body>
+<canvas id="c" width="${S}" height="${S}"></canvas><script>${EXTRA_JS}</script><script>${ART}
+const c=document.getElementById('c').getContext('2d'), S=${S};
+c.fillStyle='#BFEFFA'; ${full ? 'c.fillRect(0,0,S,S);' : 'c.beginPath();c.roundRect(0,0,S,S,S*.22);c.fill();'}
+document.fonts.load('800 100px "Baloo 2"').then(()=>{ART(c,S/2,S*.42,S*${full ? .3 : .42},1);window.done=1;});
+</script></body></html>`;
+
+const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
+const page = await browser.newPage({ viewport: { width: 1200, height: 630 } });
+await page.setContent(og, { waitUntil: 'networkidle' });
+await page.waitForFunction(() => window.done);
+await page.screenshot({ path: out('images/og-image.png') });
+for (const [name, size, full] of [['icon-512.png', 512, 1], ['icon-192.png', 192, 1], ['apple-touch-icon.png', 180, 1], ['favicon-32.png', 32, 0]]) {
+  // Page baru per ikon: setContent di page yang sama tidak membuang deklarasi `const`,
+  // jadi script kedua gagal (identifier sudah ada) dan canvas tetap kosong.
+  const ip = await browser.newPage({ viewport: { width: size, height: size } });
+  await ip.setContent(icon(size, full), { waitUntil: 'networkidle' });
+  await ip.waitForFunction(() => window.done);
+  await ip.locator('#c').screenshot({ path: out('icons/' + name), omitBackground: true });
+  await ip.close();
+}
+await browser.close();
+console.log('OK: og-image + ikon mobil-balap dibuat');
