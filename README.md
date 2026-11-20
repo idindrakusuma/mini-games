@@ -23,6 +23,7 @@
 | 🦎 [Berburu Cicak](games/berburu-cicak) | Tap cicaknya, usir keluar rumah! | [/berburu-cicak/](https://mini-games.indrakusuma.dev/berburu-cicak/) |
 | 🏎️ [Mobil Balap](games/mobil-balap) | Tebak bentuknya, ayo ngebut! | [/mobil-balap/](https://mini-games.indrakusuma.dev/mobil-balap/) |
 | 🧩 [Susun Gambar](games/susun-gambar) | Seret potongan, susun gambarnya! | [/susun-gambar/](https://mini-games.indrakusuma.dev/susun-gambar/) |
+| 🦀 [Hitung Kepiting](games/hitung-kepiting) | Hitung kepiting di pantai, yuk! | [/hitung-kepiting/](https://mini-games.indrakusuma.dev/hitung-kepiting/) |
 
 ## Struktur
 

@@ -1,0 +1,16 @@
+{
+  "name": "Hitung Kepiting",
+  "short_name": "Kepiting",
+  "description": "Game belajar berhitung, penjumlahan, dan pengurangan bersama kepiting lucu untuk anak. Gratis, langsung main di browser tanpa install.",
+  "lang": "id",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#FFE3EE",
+  "theme_color": "#FFE3EE",
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
